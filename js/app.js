@@ -63,6 +63,46 @@ document.querySelectorAll('dialog.sheet').forEach(d => d.addEventListener('click
   if (e.target === d) d.close();
 }));
 
+// Sheets wegslepen aan het greepje bovenaan: ver genoeg (of snel genoeg) omlaag = sluiten,
+// anders veert hij terug.
+document.querySelectorAll('dialog.sheet .sheet-handle').forEach(handle => {
+  const sheet = handle.closest('dialog');
+  let startY = 0, lastY = 0, lastT = 0, speed = 0, dragging = false;
+
+  handle.addEventListener('pointerdown', e => {
+    dragging = true;
+    startY = lastY = e.clientY;
+    lastT = performance.now();
+    speed = 0;
+    sheet.style.transition = 'none';
+    try { handle.setPointerCapture(e.pointerId); } catch { /* sommige browsers: niet nodig */ }
+  });
+  handle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const now = performance.now();
+    speed = (e.clientY - lastY) / Math.max(1, now - lastT); // px per ms
+    lastY = e.clientY;
+    lastT = now;
+    const dy = Math.max(0, e.clientY - startY);
+    sheet.style.transform = `translateY(${dy}px)`;
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    const dy = Math.max(0, lastY - startY);
+    sheet.style.transition = 'transform .22s ease-out';
+    if (dy > sheet.offsetHeight * 0.25 || (dy > 30 && speed > 0.6)) {
+      sheet.style.transform = 'translateY(100%)';
+      setTimeout(() => { sheet.close(); sheet.style.transform = ''; sheet.style.transition = ''; }, 220);
+    } else {
+      sheet.style.transform = '';
+      setTimeout(() => { sheet.style.transition = ''; }, 220);
+    }
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
+});
+
 // ---------- Opslaan ----------
 async function saveItem(item) {
   await DB.putItem(item);
