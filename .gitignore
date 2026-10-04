@@ -4,3 +4,7 @@
 *.pdf
 .claude/
 serve.ps1
+
+# Ontwerpbestanden (personages, referenties): niet online
+gegenereerde_afbeelding*
+ontwerp/

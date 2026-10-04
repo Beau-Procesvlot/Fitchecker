@@ -38,6 +38,7 @@ function polaroidHTML(it) {
     <div class="pol-img">${img}</div>
     <span class="pol-cap">${esc(itemTitle(it))}${weeks}</span>
     ${it.inWash ? '<span class="pol-sticker">in de was</span>' : ''}
+    ${it.photoBack ? '<span class="pol-flip" title="Heeft ook een achterkant">↻</span>' : ''}
   </button>`;
 }
 
@@ -103,8 +104,16 @@ function openDetail(id) {
   const lastWorn = it.worn?.length ? it.worn[it.worn.length - 1] : null;
   const wornToday = lastWorn === today();
 
+  // Een grote polaroid die je omdraait: voorkant, en achterkant (foto, of effen in de hoofdkleur).
+  const face = (src, fallback) => src ? `<img src="${src}" alt="">` : `<div class="pol-color" style="background:${colorCss(color)}">${fallback}</div>`;
   $('#detail-body').innerHTML = `
-    <div class="detail-pic">${pictureHTML(it)}</div>
+    <div class="flip-wrap">
+      <div class="flip-card" id="d-flip">
+        <div class="flip-face"><div class="pol-img">${face(it.photo, '')}</div><span class="pol-cap">voorkant</span></div>
+        <div class="flip-face back"><div class="pol-img">${face(it.photoBack, '<span class="no-back">geen foto van de achterkant,<br>dus effen</span>')}</div><span class="pol-cap">achterkant</span></div>
+      </div>
+    </div>
+    <p class="flip-hint">Tik op de polaroid om hem om te draaien</p>
     <h2>${esc(itemTitle(it))}</h2>
     <dl class="facts">
       <dt>Categorie</dt><dd>${esc(cat?.name || '?')}</dd>
@@ -123,6 +132,7 @@ function openDetail(id) {
       </div>
     </div>`;
 
+  $('#d-flip').onclick = () => $('#d-flip').classList.toggle('flipped');
   $('#d-wear').onclick = async () => {
     await saveItem({ ...it, worn: [...(it.worn || []), today()] });
     toast('Genoteerd');

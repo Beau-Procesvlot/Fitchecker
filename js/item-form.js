@@ -49,7 +49,7 @@ async function openBatchItem(previous) {
   const result = await batch.processed[batch.index];
   draft.processing = false;
   if (result.error) toast(result.error);
-  else Object.assign(draft, { photo: result.photo, ratio: result.ratio, color: result.color, colors: result.colors });
+  else Object.assign(draft, { photo: result.photo, ratio: result.ratio, color: result.color, colors: result.colors, colorsFront: result.colors });
   renderItemForm();
 }
 
@@ -87,6 +87,17 @@ function renderItemForm() {
   // Zonder foto is het vlak klein, zodat de categorieën meteen in beeld zijn.
   $('#f-photo-area').classList.toggle('compact', !draft.photo && !draft.processing);
 
+  // Achterkant: optioneel, alleen als er een voorkant is.
+  $('#f-back-row').classList.toggle('hidden', !draft.photo || !!draft.processing);
+  $('#f-back-area').innerHTML = draft.processingBack
+    ? '<span class="back-empty">Verwerken…</span>'
+    : draft.photoBack
+      ? `<img src="${draft.photoBack}" alt=""><span class="back-label">achterkant</span><span class="back-remove" id="f-back-remove" role="button" aria-label="Achterkant weghalen">×</span>`
+      : '<span class="back-empty">＋ Achterkant<br><span class="muted">optioneel</span></span>';
+  $('#f-back-hint').classList.toggle('hidden', !!draft.photoBack);
+  const rm = $('#f-back-remove');
+  if (rm) rm.onclick = e => { e.stopPropagation(); draft.photoBack = null; draft.colorsBack = null; recombineColors(); renderItemForm(); };
+
   // Categorieën gegroepeerd per plek, zodat je snel de juiste vindt.
   const cats = sortedCategories();
   $('#f-cats').innerHTML = SLOTS.map(slot => {
@@ -122,7 +133,7 @@ function renderItemForm() {
 
   const inBatch = batch.files.length > 1;
   const last = batch.index >= batch.files.length - 1;
-  const ok = !!draft.categoryId && !!draft.color && !draft.processing;
+  const ok = !!draft.categoryId && !!draft.color && !draft.processing && !draft.processingBack;
   $('#f-save').disabled = !ok;
   $('#f-save').textContent = inBatch && !last ? 'Opslaan, volgende' : 'Opslaan';
   $('#f-cancel').textContent = inBatch ? 'Overslaan' : 'Annuleren';
@@ -131,6 +142,40 @@ function renderItemForm() {
 }
 
 $('#f-color-fix').onclick = () => { showPalette = true; renderItemForm(); };
+
+// ---------- Achterkant ----------
+// De kleuren van voor- en achterkant samen: de voorkant telt zwaarder (65/35).
+// De hoofdkleur blijft die van de voorkant; een print op de rug telt mee als kleur.
+function recombineColors() {
+  draft.colors = draft.colorsFront || draft.colors;
+  if (!draft.colorsBack?.length) return;
+  const sum = {};
+  for (const c of draft.colorsFront || []) sum[c.id] = (sum[c.id] || 0) + c.pct * 0.65;
+  for (const c of draft.colorsBack) sum[c.id] = (sum[c.id] || 0) + c.pct * 0.35;
+  const list = Object.entries(sum).map(([id, pct]) => ({ id, pct })).sort((a, b) => b.pct - a.pct).filter(c => c.pct >= 8).slice(0, 3);
+  const total = list.reduce((s, c) => s + c.pct, 0) || 1;
+  draft.colors = list.map(c => ({ id: c.id, pct: Math.round((c.pct / total) * 100) }));
+}
+
+$('#f-back-area').onclick = () => { if (!draft.processingBack) $('#f-back').click(); };
+$('#f-back').onchange = async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  draft.processingBack = true;
+  renderItemForm();
+  try {
+    const back = await processPhoto(file);
+    if (!draft.colorsFront) draft.colorsFront = draft.colors;
+    draft.photoBack = back.photo;
+    draft.colorsBack = back.colors;
+    recombineColors();
+  } catch (err) {
+    toast(err.message);
+  }
+  draft.processingBack = false;
+  renderItemForm();
+};
 
 // Eén foto vervangen (bij bewerken, of als de foto mislukt is).
 $('#f-photo-area').onclick = () => { if (!draft.processing) $('#f-photo').click(); };
@@ -142,6 +187,8 @@ $('#f-photo').onchange = async e => {
   renderItemForm();
   try {
     Object.assign(draft, await processPhoto(file));
+    draft.colorsFront = draft.colors;
+    recombineColors();
     showPalette = false;
   } catch (err) {
     toast(err.message);
@@ -171,9 +218,9 @@ $('#f-cancel').onclick = () => {
 };
 
 $('#f-save').onclick = async () => {
-  if (!draft.categoryId || draft.processing) return;
+  if (!draft.categoryId || draft.processing || draft.processingBack) return;
   const isNew = !draft.id;
-  const { processing, ...rest } = draft;
+  const { processing, processingBack, ...rest } = draft;
   const item = {
     ...rest,
     id: draft.id || newId(),

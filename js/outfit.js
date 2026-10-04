@@ -245,7 +245,9 @@ function lookItemHTML(slot, it, nr, lookIdx) {
   const label = slot === 'outer' ? (needCoat ? 'Jas · nodig vandaag' : 'Jas · optioneel') : (categoryById(it.categoryId)?.name || '');
   return `<li class="look-item ${slot === 'outer' && !needCoat ? 'optional' : ''}">
     <span class="nr">${nr}</span>
-    <div class="look-pic">${pictureHTML(it)}</div>
+    ${it.photoBack
+      ? `<div class="look-pic flippable" data-front="${it.photo}" data-back="${it.photoBack}" title="Tik voor de achterkant">${pictureHTML(it)}<span class="flip-badge">↻</span></div>`
+      : `<div class="look-pic">${pictureHTML(it)}</div>`}
     <span class="look-label">${esc(label)}</span>
     <button class="swap" data-look="${lookIdx}" data-slot="${slot}" aria-label="Ander stuk kiezen">+</button>
   </li>`;
@@ -274,6 +276,16 @@ function renderLooks(message) {
     </article>`;
   }).join('');
   $('#looks').querySelectorAll('.swap').forEach(b => b.onclick = () => openSwap(+b.dataset.look, b.dataset.slot));
+  // Tik op een stuk met een achterkant: het draait om.
+  $('#looks').querySelectorAll('.look-pic.flippable').forEach(p => p.onclick = () => {
+    const img = p.querySelector('img');
+    p.classList.add('turning');
+    setTimeout(() => {
+      p.classList.toggle('showing-back');
+      img.src = p.classList.contains('showing-back') ? p.dataset.back : p.dataset.front;
+      p.classList.remove('turning');
+    }, 160);
+  });
 
   $('#look-dots').innerHTML = looks.length > 1 ? looks.map((_, i) => `<span class="${i === activeLook ? 'on' : ''}"></span>`).join('') : '';
 
