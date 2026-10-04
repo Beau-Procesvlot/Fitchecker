@@ -119,24 +119,6 @@ input[type=text] {
 .subhead { display: flex; align-items: center; justify-content: space-between; min-height: 30px; margin-bottom: 8px; }
 .wash-bar { display: flex; gap: 14px; }
 
-.masonry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
-.masonry-col { display: grid; gap: 12px; min-width: 0; }
-.pin {
-  position: relative; display: block; width: 100%;
-  padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
-}
-.pin img, .pin-swatch { display: block; width: 100%; border-radius: 16px; background: var(--soft); }
-.pin img { height: auto; object-fit: cover; }
-.pin-swatch { display: flex; align-items: center; justify-content: center; }
-.pin-swatch .swatch { width: 46%; }
-.pin.washing img, .pin.washing .pin-swatch { opacity: .35; }
-.pin .badge {
-  position: absolute; top: 8px; left: 8px;
-  background: var(--paper); border-radius: 999px; padding: 3px 9px;
-  font-size: .7rem; font-weight: 600;
-}
-.pin-name { display: block; padding: 6px 2px 0; font-size: .82rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
 .pic { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--soft); }
 .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .swatch { width: 55%; aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
@@ -333,6 +315,70 @@ dialog.welcome::backdrop { background: var(--paper); }
 .w-dots span { width: 8px; height: 3px; border-radius: 2px; background: var(--line); }
 .w-dots span.on { width: 18px; background: var(--ink); }
 
+/* ---------- Kast: prikbord met polaroids ---------- */
+:root {
+  --hand: Caveat, "Segoe Print", "Bradley Hand", cursive;
+  /* Kurk: nagemaakte korrel (twee lagen ruis). Een echte kurkfoto kan hier later in:
+     --cork-photo: url("img/kurk.jpg"); */
+  --cork-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .2 0 0 0 0 .09 0 0 0 1.6 -.72'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --cork-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .96 0 0 0 0 .86 0 0 0 0 .66 0 0 0 1.4 -.78'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.corkboard {
+  position: relative; margin: 0 -6px;
+  padding: 11px;                                   /* houten lijst */
+  border-radius: 8px;
+  background: linear-gradient(135deg, #b88a5a, #8f6338 40%, #a87a4b 60%, #7d5530);
+  box-shadow: 0 10px 24px rgba(60, 40, 20, .28), inset 0 1px 0 rgba(255,255,255,.25);
+}
+.pol-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 26px 16px; align-items: start;
+  padding: 26px 14px 34px; border-radius: 3px; min-height: 220px;
+  background-color: #c79f72;
+  background-image: var(--cork-photo, none), var(--cork-dark), var(--cork-light);
+  box-shadow: inset 0 0 0 1px rgba(70, 45, 20, .35), inset 0 0 26px rgba(70, 45, 20, .35);
+}
+.polaroid {
+  position: relative; display: block; width: 100%; padding: 7px 7px 0; border: 0; cursor: pointer; text-align: center;
+  background: #fbfaf6; border-radius: 2px;
+  transform: translateY(var(--dy)) rotate(var(--r));
+  box-shadow: 0 1px 1px rgba(0,0,0,.12), 0 6px 12px rgba(40, 25, 10, .28);
+  /* Vergeten stukken vergelen: --age loopt van 0 tot ~0.65 */
+  filter: sepia(var(--age)) saturate(calc(1 - var(--age) * .45)) brightness(calc(1 - var(--age) * .06));
+  transition: transform .22s cubic-bezier(.2,.7,.2,1), box-shadow .22s;
+  animation: pinIn .45s cubic-bezier(.2,.7,.2,1) both;
+}
+.pol-img { aspect-ratio: 1; overflow: hidden; background: #ddd6c8; }
+.pol-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pol-color { width: 100%; height: 100%; box-shadow: inset 0 0 18px rgba(0,0,0,.12); }
+.pol-cap {
+  display: block; padding: 6px 2px 9px; font-family: var(--hand); font-size: 1.12rem; font-weight: 600; line-height: 1.1;
+  color: #2a2a2a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Punaise: een bolletje met glans en schaduw op het papier */
+.pushpin {
+  position: absolute; top: -6px; left: var(--px); z-index: 2;
+  width: 17px; height: 17px; margin-left: -8px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgba(255,255,255,.9) 0 9%, var(--pin) 34%, color-mix(in srgb, var(--pin), #000 45%) 100%);
+  box-shadow: 2px 4px 3px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.12);
+}
+/* Aantikken: los van het bord, recht, iets groter */
+.polaroid.lifted { transform: translateY(-6px) rotate(0deg) scale(1.06); box-shadow: 0 18px 30px rgba(40, 25, 10, .35); z-index: 3; }
+.polaroid.lifted .pushpin { opacity: 0; transition: opacity .1s; }
+/* In de was: sticker erop en wat grijzer */
+.polaroid.washing .pol-img { filter: grayscale(.8) opacity(.6); }
+.pol-sticker {
+  position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%) rotate(-8deg);
+  background: #f4e27a; color: #3b3300; font-family: var(--hand); font-size: 1.1rem; font-weight: 600;
+  padding: 2px 10px; box-shadow: 0 2px 4px rgba(0,0,0,.2);
+}
+/* Net toegevoegd: de foto "ontwikkelt" zich, zoals een echte polaroid */
+.polaroid.developing .pol-img > * { animation: develop 2.4s ease-out both; }
+@keyframes develop {
+  0% { filter: brightness(2.2) saturate(0) contrast(.6); opacity: .25; }
+  60% { filter: brightness(1.2) saturate(.5); opacity: .9; }
+  100% { filter: none; opacity: 1; }
+}
+
 /* ---------- Pinterest-gevoel: borden, tegels en beweging ---------- */
 .boards {
   display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x proximity;
@@ -353,20 +399,7 @@ dialog.welcome::backdrop { background: var(--paper); }
 .board-name { display: block; margin-top: 6px; font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .board-count { display: block; font-size: .72rem; color: var(--muted); }
 
-.pin-tile {
-  display: flex; align-items: flex-end; width: 100%; border-radius: 16px; padding: 12px;
-  color: var(--paper); box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
-}
-.pin-tile.light { color: var(--ink); }
-.pin-tile span { font-family: var(--serif); font-size: 1.25rem; line-height: 1.05; }
-.pin-tile.print span { background: var(--paper); color: var(--ink); padding: 3px 10px; border-radius: 999px; font-size: 1.05rem; }
-.pin.washing .pin-tile { opacity: .35; }
-
-/* Pins komen zacht binnen, één voor één */
-.pin { animation: pinIn .45s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i, 0) * 35ms); }
 @keyframes pinIn { from { opacity: 0; transform: translateY(14px) scale(.98); } }
-.pin img, .pin-tile { transition: transform .15s ease; }
-.pin:active img, .pin:active .pin-tile { transform: scale(.97); }
 
 /* Knoppen geven een klein "klikje" */
 .btn, .chip, .day-option, .slot-option { transition: transform .12s ease, background .15s, color .15s; }

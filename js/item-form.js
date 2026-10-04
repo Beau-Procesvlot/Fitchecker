@@ -182,6 +182,7 @@ $('#f-save').onclick = async () => {
     createdAt: draft.createdAt || Date.now(),
   };
   await saveItem(item);
+  if (isNew) justAdded.add(item.id);
   renderKast();
   if (batch.files.length > 1) {
     batch.saved++;

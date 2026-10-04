@@ -1,25 +1,46 @@
-// Tabblad "Kast": overzicht per categorie, en het detailscherm van één kledingstuk.
+// Tabblad "Kast": een prikbord met je kleding als polaroids, en het detailscherm van één stuk.
 
 let kastFilter = 'all'; // 'all' | 'wash'
 let kastCategory = 'all';
+const justAdded = new Set(); // net toegevoegd: deze polaroids "ontwikkelen" zich
 
-// Placeholder-kaarten zonder foto krijgen per plek een eigen vorm,
-// zodat het raster ook zonder foto's een Pinterest-ritme heeft.
-const SWATCH_RATIO = { base: '1', mid: '1', bottom: '3 / 4', full: '2 / 3', shoes: '4 / 3', outer: '4 / 5', acc: '1' };
-
-// "3 / 4" -> hoogte gedeeld door breedte (1.33)
-function ratioValue(css) {
-  const [w, h] = css.split('/').map(Number);
-  return h ? h / w : 1;
+// Vaste "willekeur" per stuk, zodat een polaroid elke keer even scheef hangt.
+function seeded(id, salt) {
+  let h = 2166136261;
+  for (const ch of id + salt) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return ((h >>> 0) % 1000) / 1000;
 }
 
-// Stuk zonder foto: een tegel in de eigen kleur, met de categorie erop in schreefletter.
-function colorTileHTML(it, ratio) {
+// Hoe lang hangt een stuk al ongedragen? Vanaf de laatste keer dragen, of vanaf het toevoegen.
+function daysUnworn(it) {
+  const last = it.worn?.[it.worn.length - 1];
+  const since = last ? new Date(last).getTime() : (it.createdAt || Date.now());
+  return Math.floor((Date.now() - since) / 86400000);
+}
+
+function polaroidHTML(it) {
   const c = colorById(it.color);
-  const light = !c.print && luminance(hexToRgb(c.hex)) > 0.35;
-  return `<div class="pin-tile ${light ? 'light' : ''} ${c.print ? 'print' : ''}" style="aspect-ratio:${ratio};background:${colorCss(c)}">
-    <span>${esc(categoryById(it.categoryId)?.name || '')}</span></div>`;
+  const rot = (seeded(it.id, 'r') * 7 - 3.5).toFixed(1);       // -3.5° … 3.5°
+  const dy = Math.round(seeded(it.id, 'y') * 14);               // een beetje hoger of lager
+  const px = Math.round(35 + seeded(it.id, 'p') * 30);          // punaise niet altijd precies in het midden
+  // Punaise in de kleur van het stuk (bij een print: de eerste echte kleur).
+  const pinColor = c.print ? colorById(it.colors?.find(x => x.id !== 'print')?.id || 'zwart').hex : c.hex;
+  // Vergeten stukken vergelen langzaam: vanaf 3 weken ongedragen.
+  const days = daysUnworn(it);
+  const age = days >= 21 ? Math.min(0.65, (days - 14) / 80) : 0;
+  const weeks = days >= 21 ? ` · ${Math.floor(days / 7)} wk` : '';
+  const img = it.photo
+    ? `<img src="${it.photo}" alt="">`
+    : `<div class="pol-color" style="background:${colorCss(c)}"></div>`;
+  return `<button class="polaroid ${it.inWash ? 'washing' : ''} ${justAdded.has(it.id) ? 'developing' : ''}" data-id="${it.id}"
+      style="--r:${rot}deg;--dy:${dy}px;--age:${age.toFixed(2)};--pin:${pinColor};--px:${px}%">
+    <span class="pushpin" aria-hidden="true"></span>
+    <div class="pol-img">${img}</div>
+    <span class="pol-cap">${esc(itemTitle(it))}${weeks}</span>
+    ${it.inWash ? '<span class="pol-sticker">in de was</span>' : ''}
+  </button>`;
 }
+
 function miniHTML(it) {
   return it.photo ? `<img src="${it.photo}" alt="">` : `<span style="background:${colorCss(colorById(it.color))}"></span>`;
 }
@@ -64,26 +85,14 @@ function renderKast() {
     .filter(i => kastCategory === 'all' || i.categoryId === kastCategory)
     .sort((a, b) => order[a.categoryId] - order[b.categoryId] || (b.createdAt || 0) - (a.createdAt || 0));
 
-  // Twee kolommen zoals Pinterest: elk stuk gaat naar de kortste kolom,
-  // zodat de volgorde van links naar rechts loopt.
-  const cols = [[], []], heights = [0, 0];
-  for (const it of list) {
-    const ratio = it.photo ? (it.ratio || 1) : ratioValue(SWATCH_RATIO[slotOf(it)] || '1');
-    const c = heights[0] <= heights[1] ? 0 : 1;
-    cols[c].push(it);
-    heights[c] += ratio + 0.15; // + ruimte voor de naam
-  }
-  let n = 0;
-  const pinHTML = it => `
-    <button class="pin ${it.inWash ? 'washing' : ''}" data-id="${it.id}" style="--i:${Math.min(n++, 12)}">
-      ${it.photo
-        ? `<img src="${it.photo}" alt="" style="aspect-ratio:${1 / (it.ratio || 1)}">`
-        : colorTileHTML(it, SWATCH_RATIO[slotOf(it)] || '1')}
-      ${it.inWash ? '<span class="badge">In de was</span>' : ''}
-      <span class="pin-name">${esc(itemTitle(it))}</span>
-    </button>`;
-  $('#kast-list').innerHTML = cols.map(col => `<div class="masonry-col">${col.map(pinHTML).join('')}</div>`).join('');
-  $('#kast-list').querySelectorAll('.pin').forEach(b => b.onclick = () => openDetail(b.dataset.id));
+  $('#corkboard').classList.toggle('hidden', !list.length);
+  $('#kast-list').innerHTML = list.map(polaroidHTML).join('');
+  justAdded.clear();
+  // Aantikken: de polaroid komt los van het bord, daarna opent het stuk.
+  $('#kast-list').querySelectorAll('.polaroid').forEach(b => b.onclick = () => {
+    b.classList.add('lifted');
+    setTimeout(() => { openDetail(b.dataset.id); b.classList.remove('lifted'); }, 220);
+  });
 }
 
 function openDetail(id) {
