@@ -1,0 +1,6 @@
+# Niet online zetten: het plan (Word), Word-hulpbestanden, testbestanden en instellingen van Claude
+*.docx
+~$*
+*.pdf
+.claude/
+serve.ps1

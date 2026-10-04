@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f3efe6">
+<title>Fitchecker</title>
+<!-- Op het beginscherm: eigen icoon, naam en geen adresbalk -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fitchecker">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">Fitchecker</span>
+  <h1 id="page-title">Mijn kast</h1>
+</header>
+
+<div id="storage-warning" class="warning hidden">
+  Deze browser bewaart je kast niet. Wat je toevoegt is weg na het sluiten.
+</div>
+
+<main>
+  <!-- KAST -->
+  <section id="tab-kast">
+    <div class="subhead">
+      <span id="kast-count" class="muted"></span>
+      <div id="wash-bar" class="wash-bar hidden"></div>
+    </div>
+    <div class="chips scroll-x" id="kast-filter"></div>
+    <div id="kast-list" class="masonry"></div>
+    <div id="kast-empty" class="empty hidden">
+      <h2 class="serif">Begin je kast</h2>
+      <p class="muted">Maak een foto van je eerste kledingstuk. Hoe meer je toevoegt, hoe beter de looks.</p>
+      <button class="btn primary" id="empty-add">Eerste kledingstuk toevoegen</button>
+      <button class="btn ghost" id="empty-demo">Eerst even rondkijken met een voorbeeldkast</button>
+    </div>
+  </section>
+
+  <!-- LOOKS -->
+  <section id="tab-outfit" class="hidden">
+    <div id="looks-start" class="looks-start">
+      <p class="q">Klaar voor een nieuwe look?</p>
+      <p class="muted">Vertel waar je heen gaat en hoe je je voelt. De app checkt het weer en stelt looks samen.</p>
+      <button class="btn primary" id="open-planner">Wat wordt de look vandaag?</button>
+    </div>
+    <div id="plan-summary" class="plan-summary hidden">
+      <span id="plan-summary-text"></span>
+      <button class="link" id="plan-edit">Aanpassen</button>
+    </div>
+    <p id="looks-empty" class="looks-empty hidden"></p>
+    <div id="looks" class="looks"></div>
+    <div id="look-dots" class="dots"></div>
+    <div id="look-actions" class="look-actions hidden">
+      <button class="btn primary" id="wear-look">Draag ik vandaag</button>
+      <button class="btn" id="more-looks">Nieuwe looks</button>
+    </div>
+  </section>
+
+  <!-- INSTELLINGEN -->
+  <section id="tab-instellingen" class="hidden">
+    <h2 class="first">Jij</h2>
+    <div class="settings-block">
+      <p class="label">Kou en warmte</p>
+      <input type="range" id="set-koukleum" min="-2" max="2" step="1" class="slider">
+      <div class="slider-ends"><span>Snel warm</span><span>Snel koud</span></div>
+      <p class="muted small" id="set-koukleum-label"></p>
+    </div>
+    <div class="settings-row">
+      <span>Locatie <span class="muted small" id="set-location-status"></span></span>
+      <button class="link" id="set-location">Opnieuw bepalen</button>
+    </div>
+
+    <h2>Eigen situaties</h2>
+    <div id="sit-list"></div>
+
+    <div class="settings-head">
+      <h2>Categorieën</h2>
+      <button class="btn small" id="add-cat">Nieuwe categorie</button>
+    </div>
+    <p class="muted small">Elke categorie hoort bij een plek op het lichaam. Zo weet de app wat bij elkaar past.</p>
+    <div id="cat-list"></div>
+    <h2>Back-up</h2>
+    <p class="muted small">Op een iPhone wist Safari je kast als je de app 7 dagen niet opent, tenzij hij op je beginscherm staat. Een back-up is dus slim.</p>
+    <button class="settings-row" id="backup-save"><span>Kast opslaan als bestand</span><span class="muted">›</span></button>
+    <button class="settings-row" id="backup-restore"><span>Back-up terugzetten</span><span class="muted">›</span></button>
+    <input type="file" id="backup-file" accept="application/json,.json" hidden>
+
+    <h2>Overig</h2>
+    <button class="settings-row" id="settings-demo"><span>Voorbeeldkast toevoegen</span><span class="muted">›</span></button>
+    <button class="settings-row" id="settings-welcome"><span>Welkomstscherm opnieuw</span><span class="muted">›</span></button>
+  </section>
+</main>
+
+<button id="fab" class="fab" aria-label="Kledingstuk toevoegen">
+  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+</button>
+
+<nav class="tabbar">
+  <button data-tab="kast" class="on">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a2 2 0 1 1 2-2c0 1.2-2 1.6-2 3v1l8.5 6.2c.9.7.4 1.8-.6 1.8H4.1c-1 0-1.5-1.1-.6-1.8L12 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Kast
+  </button>
+  <button data-tab="outfit">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.5l-4.4 3.9 1.3 5.8L12 16.2l-4.9 3 1.3-5.8L4 9.5l5.8-.9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    Looks
+  </button>
+  <button data-tab="instellingen">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+    Instellingen
+  </button>
+</nav>
+
+<!-- Detail van één kledingstuk -->
+<dialog id="detail" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body" id="detail-body"></div>
+</dialog>
+
+<!-- Toevoegen / bewerken -->
+<dialog id="item-form" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 id="form-title" class="serif">Nieuw kledingstuk</h2>
+    <button type="button" class="photo-area" id="f-photo-area"></button>
+    <p class="tip" id="f-tip">Tip: leg het plat op een lege vloer of hang het tegen een witte muur. Dan herkent de app de kleur het best.</p>
+    <input type="file" accept="image/*" id="f-photo" hidden>
+
+    <p class="label">Categorie <span class="req">verplicht</span></p>
+    <div id="f-cats"></div>
+
+    <div id="f-fit-row">
+      <p class="label">Pasvorm</p>
+      <div class="chips" id="f-fit"></div>
+    </div>
+
+    <p class="label">Kleur <span class="muted">(herkend uit je foto)</span></p>
+    <div class="color-summary" id="f-color-summary"></div>
+    <button type="button" class="link" id="f-color-fix">Klopt niet? Kies zelf</button>
+    <div class="colors hidden" id="f-colors"></div>
+
+    <p class="label">Hoe warm is het?</p>
+    <div class="chips" id="f-warmth"></div>
+
+    <p class="label">Stijl <span class="muted">(meerdere mogelijk)</span></p>
+    <div class="chips" id="f-styles"></div>
+
+    <p class="label">Naam <span class="muted">(optioneel)</span></p>
+    <input type="text" id="f-name" placeholder="Oversized hoodie" autocomplete="off">
+  </div>
+  <div class="sheet-footer">
+    <p class="hint" id="f-hint">Kies eerst een categorie</p>
+    <div class="row">
+      <button type="button" class="btn" id="f-cancel">Annuleren</button>
+      <button type="button" class="btn primary" id="f-save">Opslaan</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Categorie maken / bewerken -->
+<dialog id="cat-editor" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 id="cat-title" class="serif">Nieuwe categorie</h2>
+    <p class="label">Naam</p>
+    <input type="text" id="c-name" placeholder="Festivalshirts" autocomplete="off">
+    <p class="label">Waar draag je het?</p>
+    <div id="c-slots" class="slot-options"></div>
+    <button type="button" class="btn danger" id="c-delete">Categorie verwijderen</button>
+    <p class="muted small" id="c-delete-hint"></p>
+  </div>
+  <div class="sheet-footer">
+    <div class="row">
+      <button type="button" class="btn" id="c-cancel">Annuleren</button>
+      <button type="button" class="btn primary" id="c-save">Opslaan</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Eén stuk in een look wisselen -->
+<dialog id="swap" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 id="swap-title" class="serif">Ander stuk</h2>
+    <div id="swap-list" class="swap-list"></div>
+    <button type="button" class="btn ghost" id="swap-remove">Weglaten uit deze look</button>
+  </div>
+</dialog>
+
+<!-- Eigen situatie -->
+<dialog id="sit-editor" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Eigen situatie</h2>
+    <p class="label">Naam</p>
+    <input type="text" id="s-name" placeholder="Bijles, koor, stage…" autocomplete="off">
+    <p class="label">Soort dag</p>
+    <div class="chips" id="s-day"></div>
+    <p class="label">Hoe laat</p>
+    <div class="time-range"><input type="time" id="s-from"><span>tot</span><input type="time" id="s-to"></div>
+    <p class="label">Hoe netjes</p>
+    <div class="chips" id="s-formality"></div>
+  </div>
+  <div class="sheet-footer">
+    <div class="row">
+      <button type="button" class="btn" id="s-cancel">Annuleren</button>
+      <button type="button" class="btn primary" id="s-save">Opslaan</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Wat wordt de look vandaag? -->
+<dialog id="plan-dialog" class="welcome plan-dialog">
+  <div class="plan-head">
+    <span class="brand">Fitchecker</span>
+    <button class="close" id="plan-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+  <h2 class="w-title">Wat wordt de look vandaag?</h2>
+    <div id="planner" class="planner">
+    <div class="step" id="step-day">
+      <p class="q">Wat voor dag is het?</p>
+      <div id="day-options" class="day-options"></div>
+    </div>
+    <div class="step hidden" id="step-act">
+      <p class="q">Wat ga je doen?</p>
+      <div class="chips" id="act-chips"></div>
+    </div>
+    <div class="step hidden" id="step-mood">
+      <p class="q">Hoe voel je je vandaag?</p>
+      <div class="chips" id="mood-chips"></div>
+    </div>      <div class="step hidden" id="step-details">
+      <p class="q">Nog even checken</p>
+      <div class="detail-row"><span class="label">Wanneer</span><div class="chips" id="when-chips"></div></div>
+      <div class="detail-row" id="row-time">
+        <span class="label">Hoe laat</span>
+        <div class="time-range"><input type="time" id="time-from"><span>tot</span><input type="time" id="time-to"></div>
+      </div>
+      <div class="detail-row" id="row-transport"><span class="label">Hoe kom je er?</span><div class="chips" id="transport-chips"></div></div>
+      <div class="detail-row" id="row-formality"><span class="label">Hoe netjes?</span><div class="chips" id="formality-chips"></div></div>
+      <div class="detail-row">
+        <span class="label">Nog iets speciaals? <span class="muted">(optioneel)</span></span>
+        <input type="text" id="search" placeholder="stoer, comfy, zwart…" autocomplete="off">
+        <p class="search-hint" id="search-hint"></p>
+      </div>
+      <div class="detail-row hidden" id="row-manual">
+        <p class="manual-reason" id="manual-reason"></p>
+        <div class="chips" id="manual-chips"></div>
+      </div>
+      <button class="btn primary" id="plan-go">Laat looks zien</button>
+    </div>
+  </div>
+
+</dialog>
+
+<!-- Welkom (eerste keer) -->
+<dialog id="welcome" class="welcome">
+  <div class="w-step">
+    <span class="brand">Fitchecker</span>
+    <h2 class="w-title">Je hele kast,<br>elke dag een look.</h2>
+    <p>Fitchecker stelt outfits samen uit je eigen kleding, past ze aan het weer en je plannen aan, en zorgt dat je vergeten stukken weer gaat dragen.</p>
+    <button class="btn primary" id="w-start">Let’s go</button>
+  </div>
+  <div class="w-step hidden">
+    <span class="brand">1 van 2</span>
+    <h2 class="w-title">Heb je het snel koud?</h2>
+    <p>Dan stelt de app eerder een extra laag voor.</p>
+    <input type="range" id="w-koukleum" min="-2" max="2" step="1" value="0" class="slider">
+    <div class="slider-ends"><span>Snel warm</span><span>Snel koud</span></div>
+    <p class="w-value" id="w-koukleum-label"></p>
+    <button class="btn primary" id="w-koukleum-next">Volgende</button>
+  </div>
+  <div class="w-step hidden">
+    <span class="brand">2 van 2</span>
+    <h2 class="w-title">Mag de app weten waar je bent?</h2>
+    <p>Alleen voor het weerbericht. Je locatie wordt afgerond op ongeveer een kilometer en verder nergens bewaard dan op je eigen telefoon.</p>
+    <button class="btn primary" id="w-location">Locatie toestaan</button>
+    <button class="btn ghost" id="w-skip">Later</button>
+  </div>
+  <div class="w-dots"><span></span><span></span><span></span></div>
+</dialog>
+
+<input type="file" accept="image/*" id="f-photos" multiple hidden>
+
+<div id="toast" class="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/db.js"></script>
+<script src="js/photo.js"></script>
+<script src="js/app.js"></script>
+<script src="js/kast.js"></script>
+<script src="js/item-form.js"></script>
+<script src="js/categories.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/outfit.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/onboarding.js"></script>
+</body>
+</html>
