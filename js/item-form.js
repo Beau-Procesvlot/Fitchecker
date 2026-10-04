@@ -9,8 +9,17 @@ const EMPTY_DRAFT = () => ({ processing: false, id: null, name: '', photo: null,
 
 // ---------- Starten ----------
 
-// De ＋ opent direct de foto-kiezer; je kunt er meerdere tegelijk kiezen.
-function startAdding() { $('#f-photos').value = ''; $('#f-photos').click(); }
+// De ＋ vraagt: foto's kiezen (één of meerdere) of snel zonder foto.
+function startAdding() { $('#add-choice').showModal(); }
+$('#choice-photos').onclick = () => {
+  $('#add-choice').close();
+  $('#f-photos').value = '';
+  $('#f-photos').click();
+};
+$('#choice-quick').onclick = () => {
+  $('#add-choice').close();
+  openItemForm(null, { quick: true });
+};
 
 $('#f-photos').onchange = e => {
   const files = [...e.target.files];
@@ -44,12 +53,14 @@ async function openBatchItem(previous) {
   renderItemForm();
 }
 
-function openItemForm(existing) {
+function openItemForm(existing, { quick = false } = {}) {
   batch.files = [];
   draft = existing ? { ...EMPTY_DRAFT(), ...existing, styles: [...existing.styles] } : EMPTY_DRAFT();
-  if (!draft.colors?.length) draft.colors = [{ id: draft.color, pct: 100 }];
+  // Zonder foto kan de app de kleur niet raden: dan kies je hem zelf (verplicht).
+  if (quick) { draft.color = null; draft.colors = []; }
+  else if (!draft.colors?.length) draft.colors = [{ id: draft.color, pct: 100 }];
   showPalette = !draft.photo;
-  $('#form-title').textContent = existing ? 'Bewerken' : 'Nieuw kledingstuk';
+  $('#form-title').textContent = existing ? 'Bewerken' : quick ? 'Snel toevoegen' : 'Nieuw kledingstuk';
   $('#f-name').value = draft.name;
   renderItemForm();
   $('#item-form').showModal();
@@ -60,6 +71,7 @@ function openItemForm(existing) {
 
 function colorSummaryHTML() {
   if (draft.processing) return '<span class="muted">Kleuren herkennen…</span>';
+  if (!draft.color) return '<span class="muted">Kies hieronder de kleur</span>';
   const list = draft.colors?.length ? draft.colors : [{ id: draft.color, pct: 100 }];
   const dots = list.map(c => `<span class="color-tag"><span class="dot" style="background:${colorCss(colorById(c.id))}"></span>${colorById(c.id).label}${list.length > 1 ? ` <span class="muted">${c.pct}%</span>` : ''}</span>`).join('');
   return (draft.color === 'print' ? '<span class="color-tag"><span class="dot" style="background:' + colorCss(colorById('print')) + '"></span>Print</span>' : '') + dots;
@@ -70,8 +82,10 @@ function renderItemForm() {
     ? '<div class="photo-empty">Foto verwerken…</div>'
     : draft.photo
       ? `<img src="${draft.photo}" alt=""><span class="photo-change">Andere foto</span>`
-      : `<div class="photo-empty"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Maak een foto of kies er een</div>`;
+      : `<div class="photo-empty"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Foto toevoegen <span class="muted">· mag ook later</span></div>`;
   $('#f-tip').classList.toggle('hidden', !!(draft.photo || draft.processing));
+  // Zonder foto is het vlak klein, zodat de categorieën meteen in beeld zijn.
+  $('#f-photo-area').classList.toggle('compact', !draft.photo && !draft.processing);
 
   // Categorieën gegroepeerd per plek, zodat je snel de juiste vindt.
   const cats = sortedCategories();
@@ -108,11 +122,12 @@ function renderItemForm() {
 
   const inBatch = batch.files.length > 1;
   const last = batch.index >= batch.files.length - 1;
-  const ok = !!draft.categoryId && !draft.processing;
+  const ok = !!draft.categoryId && !!draft.color && !draft.processing;
   $('#f-save').disabled = !ok;
   $('#f-save').textContent = inBatch && !last ? 'Opslaan, volgende' : 'Opslaan';
   $('#f-cancel').textContent = inBatch ? 'Overslaan' : 'Annuleren';
-  $('#f-hint').classList.toggle('hidden', !!draft.categoryId);
+  $('#f-hint').textContent = !draft.categoryId ? 'Kies eerst een categorie' : 'Kies nog een kleur';
+  $('#f-hint').classList.toggle('hidden', ok || !!draft.processing);
 }
 
 $('#f-color-fix').onclick = () => { showPalette = true; renderItemForm(); };

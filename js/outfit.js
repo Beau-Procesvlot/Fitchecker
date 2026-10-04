@@ -165,8 +165,9 @@ function buildLook(c, used, taken, ctx) {
     const canSplit = c.base.length && c.bottom.length;
     if (c.full.length && (!canSplit || Math.random() < 0.3)) o.full = pick(c.full);
     else if (canSplit) { o.base = pick(c.base); o.bottom = pick(c.bottom); }
-    // Laag eroverheen: bij koud bijna altijd, bij mild soms (vaker als het waait), bij warm niet.
-    const midChance = { warm: 0, mild: ctx.windy ? 0.75 : 0.45, koud: 0.9 }[ctx.level];
+    // Laag eroverheen: bij koud altijd (een shirt alleen bij 7° is niet realistisch),
+    // bij mild soms (vaker als het waait), bij warm niet.
+    const midChance = { warm: 0, mild: ctx.windy ? 0.75 : 0.45, koud: 1 }[ctx.level];
     if (c.mid.length && Math.random() < midChance) o.mid = pick(c.mid);
     if (c.shoes.length) o.shoes = pick(c.shoes);
     if (c.acc.length && Math.random() < 0.4) o.acc = pick(c.acc);
@@ -183,6 +184,8 @@ function buildLook(c, used, taken, ctx) {
   if (!ctx.indoor && c.outer.length && (ctx.level !== 'warm' || ctx.rain)) {
     best.parts.outer = (ctx.level === 'koud' && c.outer.find(j => j.warmth === 3)) || pick(c.outer);
   }
+  // Koud maar geen trui of vest in de kast? Eerlijk zeggen, in plaats van doen alsof het klopt.
+  if (ctx.level === 'koud' && !ctx.indoor && !best.parts.mid) best.why.unshift('Het is koud: een trui of vest eroverheen zou fijn zijn, maar die staat nog niet in je kast.');
   if (ctx.rain) best.why.push('Regen verwacht: jas mee.');
   else if (ctx.windy && best.parts.mid) best.why.push('Het waait flink, dus een laag extra.');
   best.why = best.why.slice(0, 2).join(' ');
@@ -238,8 +241,9 @@ function titleColor(parts) {
 // ---------- Weergave ----------
 
 function lookItemHTML(slot, it, nr, lookIdx) {
-  const label = slot === 'outer' ? 'Jas · optioneel' : (categoryById(it.categoryId)?.name || '');
-  return `<li class="look-item ${slot === 'outer' ? 'optional' : ''}">
+  const needCoat = lookCtx && !lookCtx.indoor && (lookCtx.level === 'koud' || lookCtx.rain);
+  const label = slot === 'outer' ? (needCoat ? 'Jas · nodig vandaag' : 'Jas · optioneel') : (categoryById(it.categoryId)?.name || '');
+  return `<li class="look-item ${slot === 'outer' && !needCoat ? 'optional' : ''}">
     <span class="nr">${nr}</span>
     <div class="look-pic">${pictureHTML(it)}</div>
     <span class="look-label">${esc(label)}</span>
@@ -259,7 +263,7 @@ function renderLooks(message) {
   $('#looks').innerHTML = looks.map((look, i) => {
     const slots = MAIN_ORDER.filter(s => look.parts[s]);
     if (look.parts.outer) slots.push('outer');
-    return `<article class="look">
+    return `<article class="look ${i === activeLook ? 'active' : ''}">
       <div class="look-meta"><span>${left}</span><span>${right}</span></div>
       <h2 class="look-title" style="color:${titleColor(look.parts)}">Look ${i + 1}</h2>
       <p class="look-why">${look.why}</p>
@@ -303,6 +307,7 @@ $('#looks').addEventListener('scroll', () => {
   if (i !== activeLook) {
     activeLook = i;
     $('#look-dots').querySelectorAll('span').forEach((d, n) => d.classList.toggle('on', n === i));
+    el.querySelectorAll('.look').forEach((l, n) => l.classList.toggle('active', n === i));
   }
 }, { passive: true });
 

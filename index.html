@@ -37,9 +37,17 @@
       <span id="kast-count" class="muted"></span>
       <div id="wash-bar" class="wash-bar hidden"></div>
     </div>
-    <div class="chips scroll-x" id="kast-filter"></div>
+    <div class="boards" id="kast-boards"></div>
     <div id="kast-list" class="masonry"></div>
     <div id="kast-empty" class="empty hidden">
+      <div class="mood-collage" aria-hidden="true">
+        <span style="--r:-4deg;background:#1a1a1a;color:#f3efe6">Denim</span>
+        <span style="--r:3deg;background:#d2b98f">Knit</span>
+        <span style="--r:-2deg;background:#e8e2d5">Basics</span>
+        <span style="--r:5deg;background:#6e4a2c;color:#f3efe6">Layers</span>
+        <span style="--r:-5deg;background:#efe6d2">Sneakers</span>
+        <span style="--r:2deg;background:#1f2b47;color:#f3efe6">Vintage</span>
+      </div>
       <h2 class="serif">Begin je kast</h2>
       <p class="muted">Maak een foto van je eerste kledingstuk. Hoe meer je toevoegt, hoe beter de looks.</p>
       <button class="btn primary" id="empty-add">Eerste kledingstuk toevoegen</button>
@@ -194,6 +202,24 @@
     <h2 id="swap-title" class="serif">Ander stuk</h2>
     <div id="swap-list" class="swap-list"></div>
     <button type="button" class="btn ghost" id="swap-remove">Weglaten uit deze look</button>
+  </div>
+</dialog>
+
+<!-- Toevoegen: met of zonder foto -->
+<dialog id="add-choice" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Toevoegen</h2>
+    <div class="choice-list">
+      <button class="choice" id="choice-photos">
+        <strong>Foto's kiezen</strong>
+        <span>Eén of meerdere tegelijk. De app herkent de kleur zelf.</span>
+      </button>
+      <button class="choice" id="choice-quick">
+        <strong>Snel, zonder foto</strong>
+        <span>Voor basics, zoals een effen wit T-shirt. Kleur kies je zelf; een foto kan later nog.</span>
+      </button>
+    </div>
   </div>
 </dialog>
 

@@ -13,6 +13,17 @@ function ratioValue(css) {
   return h ? h / w : 1;
 }
 
+// Stuk zonder foto: een tegel in de eigen kleur, met de categorie erop in schreefletter.
+function colorTileHTML(it, ratio) {
+  const c = colorById(it.color);
+  const light = !c.print && luminance(hexToRgb(c.hex)) > 0.35;
+  return `<div class="pin-tile ${light ? 'light' : ''} ${c.print ? 'print' : ''}" style="aspect-ratio:${ratio};background:${colorCss(c)}">
+    <span>${esc(categoryById(it.categoryId)?.name || '')}</span></div>`;
+}
+function miniHTML(it) {
+  return it.photo ? `<img src="${it.photo}" alt="">` : `<span style="background:${colorCss(colorById(it.color))}"></span>`;
+}
+
 function renderKast() {
   const inWash = state.items.filter(i => i.inWash);
   if (kastFilter === 'wash' && !inWash.length) kastFilter = 'all';
@@ -35,12 +46,18 @@ function renderKast() {
   $('#kast-empty').classList.toggle('hidden', state.items.length > 0);
   $('#kast-count').textContent = state.items.length ? `${state.items.length} stuks` : '';
 
-  // Filterknoppen: alleen categorieën waar iets in zit, in volgorde van het lichaam.
+  // Borden, zoals op Pinterest: per categorie een collage van je stukken. Tik = filteren.
   const used = sortedCategories().filter(c => state.items.some(i => i.categoryId === c.id));
   if (kastCategory !== 'all' && !used.some(c => c.id === kastCategory)) kastCategory = 'all';
-  $('#kast-filter').classList.toggle('hidden', used.length < 2);
-  renderChips($('#kast-filter'), [{ id: 'all', label: 'Alles' }, ...used.map(c => ({ id: c.id, label: c.name }))],
-    id => id === kastCategory, id => { kastCategory = id; renderKast(); });
+  $('#kast-boards').classList.toggle('hidden', used.length < 2);
+  const boards = [{ id: 'all', name: 'Alles', items: state.items }, ...used.map(c => ({ id: c.id, name: c.name, items: state.items.filter(i => i.categoryId === c.id) }))];
+  $('#kast-boards').innerHTML = boards.map(b => `
+    <button class="board ${kastCategory === b.id ? 'on' : ''}" data-board="${b.id}">
+      <div class="board-cover">${[0, 1, 2, 3].map(n => b.items[n] ? `<div>${miniHTML(b.items[n])}</div>` : '<div></div>').join('')}</div>
+      <span class="board-name">${esc(b.name)}</span>
+      <span class="board-count">${b.items.length}</span>
+    </button>`).join('');
+  $('#kast-boards').querySelectorAll('.board').forEach(b => b.onclick = () => { kastCategory = b.dataset.board; renderKast(); });
 
   const order = Object.fromEntries(sortedCategories().map((c, i) => [c.id, i]));
   const list = (kastFilter === 'wash' ? inWash : state.items)
@@ -56,11 +73,12 @@ function renderKast() {
     cols[c].push(it);
     heights[c] += ratio + 0.15; // + ruimte voor de naam
   }
+  let n = 0;
   const pinHTML = it => `
-    <button class="pin ${it.inWash ? 'washing' : ''}" data-id="${it.id}">
+    <button class="pin ${it.inWash ? 'washing' : ''}" data-id="${it.id}" style="--i:${Math.min(n++, 12)}">
       ${it.photo
         ? `<img src="${it.photo}" alt="" style="aspect-ratio:${1 / (it.ratio || 1)}">`
-        : `<div class="pin-swatch" style="aspect-ratio:${SWATCH_RATIO[slotOf(it)] || '1'}"><div class="swatch" style="background:${colorCss(colorById(it.color))}"></div></div>`}
+        : colorTileHTML(it, SWATCH_RATIO[slotOf(it)] || '1')}
       ${it.inWash ? '<span class="badge">In de was</span>' : ''}
       <span class="pin-name">${esc(itemTitle(it))}</span>
     </button>`;
