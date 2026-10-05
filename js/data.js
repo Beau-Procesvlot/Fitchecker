@@ -44,6 +44,19 @@ const DEFAULT_CATEGORIES = [
   ['sieraden', 'Sieraden', 'acc'],
 ].map(([id, name, slot], order) => ({ id, name, slot, order }));
 
+// Voor wie is de kast? Bij "man" verdwijnen deze categorieën uit de keuzes
+// (behalve als er al iets in zit).
+const GENDERS = [
+  { id: 'man',   label: 'Man' },
+  { id: 'vrouw', label: 'Vrouw' },
+  { id: 'alles', label: 'Alles laten zien' },
+];
+const HIDDEN_FOR = {
+  man: ['jurken', 'jumpsuits', 'rokken', 'blouses'],
+  vrouw: [],
+  alles: [],
+};
+
 // neutral: past bij alles. hue: kleurtoon in graden, voor kleurharmonie.
 // tone: warme aardetinten en koele felle kleuren gaan minder goed samen.
 const COLORS = [

@@ -84,6 +84,10 @@
   <section id="tab-instellingen" class="hidden">
     <h2 class="first">Jij</h2>
     <div class="settings-block">
+      <p class="label">Kast voor</p>
+      <div class="chips" id="set-gender"></div>
+    </div>
+    <div class="settings-block">
       <p class="label">Kou en warmte</p>
       <input type="range" id="set-koukleum" min="-2" max="2" step="1" class="slider">
       <div class="slider-ends"><span>Snel warm</span><span>Snel koud</span></div>
@@ -353,7 +357,13 @@
     <button class="btn primary" id="w-start">Let’s go</button>
   </div>
   <div class="w-step hidden">
-    <span class="brand">1 van 2</span>
+    <span class="brand">1 van 3</span>
+    <h2 class="w-title">Voor wie is je kast?</h2>
+    <p>Dan laat de app alleen de categorieën zien die bij je passen. Je kunt dit later altijd aanpassen.</p>
+    <div class="gender-options" id="w-gender"></div>
+  </div>
+  <div class="w-step hidden">
+    <span class="brand">2 van 3</span>
     <h2 class="w-title">Heb je het snel koud?</h2>
     <p>Dan stelt de app eerder een extra laag voor.</p>
     <input type="range" id="w-koukleum" min="-2" max="2" step="1" value="0" class="slider">
@@ -362,13 +372,13 @@
     <button class="btn primary" id="w-koukleum-next">Volgende</button>
   </div>
   <div class="w-step hidden">
-    <span class="brand">2 van 2</span>
+    <span class="brand">3 van 3</span>
     <h2 class="w-title">Mag de app weten waar je bent?</h2>
     <p>Alleen voor het weerbericht. Je locatie wordt afgerond op ongeveer een kilometer en verder nergens bewaard dan op je eigen telefoon.</p>
     <button class="btn primary" id="w-location">Locatie toestaan</button>
     <button class="btn ghost" id="w-skip">Later</button>
   </div>
-  <div class="w-dots"><span></span><span></span><span></span></div>
+  <div class="w-dots"><span></span><span></span><span></span><span></span></div>
 </dialog>
 
 <input type="file" accept="image/*" id="f-photos" multiple hidden>

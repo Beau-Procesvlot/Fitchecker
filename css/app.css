@@ -615,6 +615,13 @@ dialog.plan-dialog .planner { padding-bottom: 24px; }
 
 .doodle { position: absolute; right: 6px; bottom: 6px; color: #b39c7d; }
 
+/* Voor wie is je kast? (welkomstscherm) */
+.gender-options { display: grid; gap: 10px; margin-top: 8px; }
+.gender-options .day-option { min-height: 64px; justify-content: center; }
+.gender-options .day-option strong { font-size: 1.4rem; }
+.gender-options .day-option:nth-child(n) { background: var(--card); color: var(--ink); border-color: var(--line); grid-column: auto; }
+.gender-options .day-option.on { background: var(--ink); color: var(--paper); }
+
 /* Locatie in instellingen */
 .loc-status { margin: 0 0 10px; font-size: .9rem; }
 .city-results { margin-top: 12px; }

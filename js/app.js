@@ -22,6 +22,13 @@ function sortedCategories() {
   return [...state.categories].sort((a, b) => slotIndex[a.slot] - slotIndex[b.slot] || a.order - b.order);
 }
 
+// Categorieën om uit te kiezen: zonder de categorieën die niet bij jou passen (man/vrouw),
+// maar een categorie waar al iets in zit blijft altijd zichtbaar.
+function visibleCategories() {
+  const hide = HIDDEN_FOR[state.profile.gender] || [];
+  return sortedCategories().filter(c => !hide.includes(c.id) || state.items.some(i => i.categoryId === c.id));
+}
+
 // Rij met keuzeknoppen. isOn(id) bepaalt of een knop aan staat.
 function renderChips(el, options, isOn, onClick) {
   el.innerHTML = '';
@@ -179,13 +186,16 @@ async function loadDemo() {
   ];
   const fits = { 'Grijze hoodie': 'wijd', 'Crème vest': 'wijd', 'Joggingbroek': 'wijd', 'Beige pantalon': 'wijd', 'Zwarte spijkerbroek': 'slim', 'Zwarte coltrui': 'slim', 'Wit T-shirt': 'wijd' };
   const colorMix = { 'Gestreept shirt': [{ id: 'navy', pct: 55 }, { id: 'wit', pct: 45 }] };
-  for (const [name, categoryId, color, warmth, styles] of demo) {
+  // Geen jurk of rok in de voorbeeldkast van een man.
+  const hide = HIDDEN_FOR[state.profile.gender] || [];
+  const list = demo.filter(([, categoryId]) => !hide.includes(categoryId));
+  for (const [name, categoryId, color, warmth, styles] of list) {
     await saveItem({
       id: newId(), name, photo: null, categoryId, color, colors: colorMix[name] || [{ id: color, pct: 100 }],
       fit: fits[name] || 'normaal', warmth, styles, inWash: false, worn: [], createdAt: Date.now(),
     });
   }
-  toast(`${demo.length} voorbeeldstukken toegevoegd`);
+  toast(`${list.length} voorbeeldstukken toegevoegd`);
   showTab('kast');
 }
 

@@ -99,7 +99,7 @@ function renderItemForm() {
   if (rm) rm.onclick = e => { e.stopPropagation(); draft.photoBack = null; draft.colorsBack = null; draft.cutoutBack = null; recombineColors(); renderItemForm(); };
 
   // Categorieën gegroepeerd per plek, zodat je snel de juiste vindt.
-  const cats = sortedCategories();
+  const cats = visibleCategories();
   $('#f-cats').innerHTML = SLOTS.map(slot => {
     const inSlot = cats.filter(c => c.slot === slot.id);
     if (!inSlot.length) return '';

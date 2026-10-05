@@ -1,4 +1,4 @@
-// Welkomstscherm bij de eerste keer: koukleum-schuifje en locatie toestaan.
+// Welkomstscherm bij de eerste keer: voor wie de kast is, koukleum-schuifje en locatie toestaan.
 // In fase 4 komt het moodboard hier als extra stap bij.
 
 let welcomeStep = 0;
@@ -18,6 +18,13 @@ function renderWelcome() {
   document.querySelectorAll('#welcome .w-step').forEach((s, i) => s.classList.toggle('hidden', i !== welcomeStep));
   document.querySelectorAll('#welcome .w-dots span').forEach((d, i) => d.classList.toggle('on', i === welcomeStep));
   $('#w-koukleum-label').textContent = koukleumLabel($('#w-koukleum').value);
+  $('#w-gender').innerHTML = GENDERS.map(g => `<button class="day-option ${state.profile.gender === g.id ? 'on' : ''}" data-g="${g.id}"><strong>${g.label}</strong></button>`).join('');
+  $('#w-gender').querySelectorAll('button').forEach(b => b.onclick = async () => {
+    state.profile.gender = b.dataset.g;
+    await saveProfile();
+    welcomeStep = 2;
+    renderWelcome();
+  });
 }
 
 $('#w-koukleum').oninput = renderWelcome;
@@ -25,7 +32,7 @@ $('#w-start').onclick = () => { welcomeStep = 1; renderWelcome(); };
 $('#w-koukleum-next').onclick = async () => {
   state.profile.koukleum = +$('#w-koukleum').value;
   await saveProfile();
-  welcomeStep = 2;
+  welcomeStep = 3;
   renderWelcome();
 };
 

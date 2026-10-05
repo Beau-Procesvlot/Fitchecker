@@ -1,6 +1,12 @@
 // Tabblad "Instellingen": jouw voorkeuren, categorieën, eigen situaties en back-up.
 
 async function renderSettings() {
+  renderChips($('#set-gender'), GENDERS, id => state.profile.gender === id, async id => {
+    state.profile.gender = id;
+    await saveProfile();
+    renderSettings();
+    toast(id === 'man' ? 'Jurken, rokken, jumpsuits en blouses verborgen' : 'Alle categorieën zichtbaar');
+  });
   $('#set-koukleum').value = state.profile.koukleum;
   $('#set-koukleum-label').textContent = koukleumLabel(state.profile.koukleum);
   renderLocationStatus();
@@ -23,7 +29,7 @@ async function renderSettings() {
   });
 
 
-  const cats = sortedCategories();
+  const cats = visibleCategories();
   $('#cat-list').innerHTML = SLOTS.map(slot => {
     const inSlot = cats.filter(c => c.slot === slot.id);
     return `<div class="settings-group">
