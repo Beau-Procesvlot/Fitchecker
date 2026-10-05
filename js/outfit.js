@@ -265,6 +265,97 @@ function titleColor(parts) {
 
 // ---------- Weergave ----------
 
+// ---------- Waarom deze look (onder de looks, om naar toe te scrollen) ----------
+// Geen tweede lijst met kleding, maar de redenering: het kleurenpalet en een paar korte uitleggen.
+
+// Hoeveel van de outfit is welke kleur? Grote stukken tellen zwaarder dan schoenen of een riem.
+const SLOT_WEIGHT = { full: 4, base: 2.5, mid: 3, bottom: 3, shoes: 1, acc: 0.6 };
+function lookPalette(parts) {
+  const sum = {};
+  for (const [slot, it] of Object.entries(parts)) {
+    const cols = it.colors?.length ? it.colors : [{ id: it.color, pct: 100 }];
+    for (const c of cols) if (c.id !== 'print') sum[c.id] = (sum[c.id] || 0) + (SLOT_WEIGHT[slot] || 1) * c.pct;
+  }
+  const total = Object.values(sum).reduce((a, b) => a + b, 0) || 1;
+  return Object.entries(sum).map(([id, v]) => ({ id, pct: Math.round((v / total) * 100) })).sort((a, b) => b.pct - a.pct).slice(0, 4);
+}
+
+function explainLook(look, ctx) {
+  const parts = Object.values(look.parts);
+  const reasons = [];
+  const col = colorScore(parts);
+  const ids = [...new Set(parts.flatMap(itemColors))];
+  const accents = ids.map(colorById).filter(c => !c.neutral && !c.print);
+  const name = c => c.label.toLowerCase();
+
+  // Kleur
+  if (parts.some(i => i.color === 'print') && accents.length === 0) reasons.push(['Kleur', 'De print is het enige drukke stuk. Alles eromheen is rustig, zodat hij goed uitkomt.']);
+  else if (col.accents === 0) reasons.push(['Kleur', ids.length <= 2 ? 'Eén kleurfamilie van top tot teen. Dat oogt rustig en doordacht.' : 'Alleen neutrale kleuren. Die passen altijd bij elkaar, dus je zit altijd goed.']);
+  else if (accents.length === 1) reasons.push(['Kleur', `${accents[0].label} is de enige opvallende kleur. De neutrale stukken eromheen geven hem de ruimte.`]);
+  else if (accents.length === 2) {
+    let d = Math.abs(accents[0].hue - accents[1].hue); d = Math.min(d, 360 - d);
+    reasons.push(['Kleur', d <= 45 ? `${accents[0].label} en ${name(accents[1])} liggen dicht bij elkaar op het kleurenwiel: ze versterken elkaar zonder te botsen.`
+      : d >= 150 ? `${accents[0].label} en ${name(accents[1])} zijn elkaars tegenpool. Dat geeft spanning, en juist daardoor valt het op.`
+      : `${accents[0].label} met ${name(accents[1])}: een gewaagde combinatie.`]);
+  }
+  // Tinten
+  // Alleen benoemen als echt minstens twee kleuren dezelfde kant op gaan (en niets de andere kant).
+  const warm = ids.filter(id => colorById(id).tone === 'warm').length, cool = ids.filter(id => colorById(id).tone === 'cool').length;
+  if (warm >= 2 && !cool) reasons.push(['Tinten', 'Warme aardetinten bij elkaar: zacht en herfstig.']);
+  else if (cool >= 2 && !warm) reasons.push(['Tinten', 'Koele tinten bij elkaar: fris en strak.']);
+  // Silhouet
+  const top = look.parts.mid || look.parts.base, bottom = look.parts.bottom;
+  if (top && bottom) {
+    const t = top.fit || 'normaal', b = bottom.fit || 'normaal';
+    if (t === 'wijd' && b === 'slim') reasons.push(['Silhouet', 'Wijd boven, slank onder. Die balans maakt een losse trui of hoodie meteen netter.']);
+    else if (t === 'slim' && b === 'wijd') reasons.push(['Silhouet', 'Strak boven, wijd onder: de broek mag het volume hebben.']);
+  }
+  // Weer
+  if (ctx && !ctx.indoor) {
+    const feels = ctx.minFeels !== undefined ? ` (voelt als ${ctx.minFeels}°)` : '';
+    if (ctx.level === 'koud') reasons.push(['Weer', `Het is koud${feels}, daarom ${look.parts.mid ? 'een laag eroverheen' : 'warme stukken'}.${ctx.rain ? ' En kans op regen: jas mee.' : ''}`]);
+    else if (ctx.level === 'warm') reasons.push(['Weer', 'Warm weer: dunne, luchtige stukken.']);
+    else if (ctx.rain) reasons.push(['Weer', 'Niet koud, wel kans op regen: denk aan een jas en dichte schoenen.']);
+    else if (ctx.windy) reasons.push(['Weer', 'Het waait flink: een laag extra houdt de wind tegen.']);
+  }
+  // Stemming en zoekwoorden
+  const wished = [...new Set(ctx?.search?.recognized || [])];
+  if (wished.length) reasons.push(['Jouw wens', `Je stemming: ${wished.join(', ')}. Daar heeft de app op gelet bij het kiezen.`]);
+  // Vergeten
+  const forgotten = forgottenWhy(parts);
+  if (forgotten) reasons.push(['Uit de kast', forgotten]);
+
+  return { quote: look.why.split('. ')[0].replace(/\.$/, ''), palette: lookPalette(look.parts), reasons: reasons.slice(0, 4) };
+}
+
+// De rij looks is zo hoog als de look die je bekijkt (anders ontstaat er een gat onder korte looks).
+function fitLooksHeight() {
+  const card = $('#looks').querySelectorAll('.look')[activeLook];
+  $('#looks').style.height = card ? `${card.offsetHeight + 4}px` : '';
+}
+
+function renderWhyMore() {
+  fitLooksHeight();
+  const look = looks[activeLook];
+  $('#why-more').classList.toggle('hidden', !look);
+  if (!look) return;
+  const e = explainLook(look, lookCtx);
+  $('#why-more').innerHTML = `
+    <p class="why-kicker">Waarom look ${activeLook + 1}</p>
+    <blockquote class="why-quote">“${esc(e.quote)}”</blockquote>
+    <div class="chips-palette">
+      ${e.palette.map(c => {
+        const col = colorById(c.id);
+        return `<div class="chip-card"><div class="chip-color" style="background:${colorCss(col)}"></div><span class="chip-name">${col.label}</span><span class="chip-pct">${c.pct}%</span></div>`;
+      }).join('')}
+    </div>
+    <div class="why-reasons">
+      ${e.reasons.map(([label, text]) => `<div class="why-reason"><span class="why-label">${label}</span><p>${esc(text)}</p></div>`).join('')}
+    </div>`;
+  // Even laten "opvallen" dat het meeverandert bij swipen.
+  $('#why-more').classList.remove('fade'); void $('#why-more').offsetWidth; $('#why-more').classList.add('fade');
+}
+
 // Jas: geen stuk in de look, maar een advies op basis van het weer.
 function coatAdvice(ctx) {
   if (!ctx || ctx.indoor) return null;
@@ -328,6 +419,7 @@ function renderLooks(message) {
   });
 
   $('#look-dots').innerHTML = looks.length > 1 ? looks.map((_, i) => `<span class="${i === activeLook ? 'on' : ''}"></span>`).join('') : '';
+  renderWhyMore();
 
   // Bewaren, zodat je je looks terugziet als je de app binnen 2 uur weer opent.
   if (looks.length && lookCtx) {
@@ -360,6 +452,7 @@ $('#looks').addEventListener('scroll', () => {
     activeLook = i;
     $('#look-dots').querySelectorAll('span').forEach((d, n) => d.classList.toggle('on', n === i));
     el.querySelectorAll('.look').forEach((l, n) => l.classList.toggle('active', n === i));
+    renderWhyMore();
   }
 }, { passive: true });
 
