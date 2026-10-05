@@ -545,3 +545,81 @@ dialog.plan-dialog .planner { padding-bottom: 24px; }
   transition: opacity .2s, transform .2s; white-space: nowrap;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Look-kaart: ontwerp met penseelstreken, notities en krabbels ---------- */
+.topbar h1.swash { position: relative; display: inline-block; }
+.topbar h1.swash::after {
+  content: ""; position: absolute; left: 30%; right: 2%; bottom: -9px; height: 14px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14' preserveAspectRatio='none'%3E%3Cpath d='M3 10C55 3 130 1 197 6' fill='none' stroke='%23b39c7d' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+}
+
+.look {
+  position: relative; overflow: hidden; border: 0; border-radius: 28px; padding: 16px 14px 14px;
+  background-color: #f8f4ec;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 90'%3E%3Cpath d='M8 70C50 30 120 8 192 14C150 30 96 52 30 86C18 90 4 82 8 70Z' fill='%23d8ccb6' opacity='.45'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 90'%3E%3Cpath d='M6 60C58 44 112 18 194 8C160 34 108 58 22 84C10 86 0 70 6 60Z' fill='%23d8ccb6' opacity='.4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 150px auto, 200px auto;
+  background-position: -50px 150px, right -60px top 430px;
+  box-shadow: 0 12px 30px rgba(60, 45, 25, .13), inset 0 1px 0 rgba(255,255,255,.8);
+}
+.look::after {
+  content: ""; position: absolute; left: -44px; bottom: -40px; width: 170px; height: 96px; z-index: 0;
+  background: #9fb3a0; opacity: .6; border-radius: 58% 42% 50% 50%; transform: rotate(-14deg);
+}
+.look > * { position: relative; z-index: 1; }
+
+.look-meta { align-items: center; letter-spacing: 0; text-transform: none; }
+.sit-pill {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 12px; border-radius: 999px;
+  background: #7f9a84; color: #f6f3ec; font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+}
+.weather-tag { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 500; color: var(--ink); }
+.weather-tag svg { color: #b08a3e; flex: none; }
+.look-title { font-size: 3.4rem; margin: 18px 0 6px; }
+.look-why { color: #5a554c; font-size: .9rem; }
+
+.coat {
+  margin: 0 auto 14px; padding: 9px 18px; gap: 8px;
+  background: #fbf8f2; color: var(--ink); border: 1px solid var(--line);
+  box-shadow: 0 3px 8px rgba(40, 25, 10, .07); font-size: .86rem;
+}
+.coat svg { width: 20px; height: 20px; }
+.coat span { opacity: .7; }
+.coat-ja { border-color: var(--ink); background: #fbf8f2; color: var(--ink); }
+.coat-handig { background: #fbf8f2; }
+
+.look-body { border-top: 0; grid-template-columns: 120px 1fr; margin-top: 4px; }
+.look-items { position: relative; border-right: 1px solid rgba(60, 45, 25, .08); padding-left: 10px; }
+.look-items::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 9px; border-radius: 6px; background: #ebe3d4; }
+.look-item { border-bottom: 0; padding: 12px 8px 10px 12px; }
+.look-item .nr {
+  left: 2px; top: 4px; width: 26px; height: 26px; padding: 0; z-index: 2;
+  border-radius: 50%; line-height: 26px; font-size: .8rem; font-weight: 600;
+  box-shadow: 0 0 0 2px #f8f4ec;
+}
+.look-pic { width: 86px; border-radius: 16px; box-shadow: 0 5px 12px rgba(40, 25, 10, .16); }
+.look-label { font-size: .78rem; color: var(--ink); margin-top: 7px; }
+.swap { right: 4px; bottom: 32px; width: 28px; height: 28px; border-color: #f8f4ec; }
+
+.look-figure { position: relative; padding: 34px 4px 30px; }
+.note {
+  position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: center;
+  font-family: var(--hand); font-size: 1.18rem; font-weight: 600; line-height: 1; color: #3a332a; white-space: nowrap;
+}
+.note svg { color: #3a332a; }
+.note-top { right: 0; top: 4px; }
+
+.note-side { left: 2px; bottom: 26%; }
+
+.doodle { position: absolute; right: 6px; bottom: 6px; color: #b39c7d; }
+
+/* Fijnafstemming look-kaart */
+.sit-pill, .weather-tag { white-space: nowrap; }
+.weather-tag { font-size: .78rem; }
+.coat { flex-wrap: nowrap; white-space: nowrap; max-width: calc(100% - 8px); }
+.coat span { overflow: hidden; text-overflow: ellipsis; }
+.note .arrow { color: #3a332a; margin-top: 2px; }
+.note-top .arrow { transform: scaleX(-1) rotate(10deg); }
+.note-side .arrow { transform: rotate(-35deg); }

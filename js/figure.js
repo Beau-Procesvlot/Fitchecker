@@ -5,10 +5,13 @@ const SKIN = '#d6b294';
 const SHORT_BOTTOMS = ['shorts'];
 const SKIRTS = ['rokken'];
 
+// Een print tekent de pop in de hoofdkleur van het stuk; strepen alleen als er geen andere kleur bekend is.
 function figureFill(it) {
   if (!it) return null;
   const c = colorById(it.color);
-  return c.print ? 'url(#fig-print)' : c.hex;
+  if (!c.print) return c.hex;
+  const main = it.colors?.find(x => x.id !== 'print');
+  return main ? colorById(main.id).hex : 'url(#fig-print)';
 }
 
 function figureSVG(p) {

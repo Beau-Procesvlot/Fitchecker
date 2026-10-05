@@ -152,7 +152,7 @@ $('#plan-go').onclick = async () => {
   const sit = plan.situation;
   if (!sit) return;
   const ctx = {
-    label: sit.label, indoor: !!sit.indoor,
+    label: sit.label, sitId: sit.custom ? 'eigen' : sit.id, indoor: !!sit.indoor,
     formality: plan.formality, styles: stylesFor(sit, plan.formality),
     // De stemming telt mee als extra zoekwoorden.
     search: parseSearch(`${$('#search').value} ${MOODS.find(m => m.id === plan.mood)?.words || ''}`),

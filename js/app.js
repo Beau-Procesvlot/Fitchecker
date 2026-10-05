@@ -126,6 +126,7 @@ function showTab(name) {
   document.querySelectorAll('main > section').forEach(s => s.classList.toggle('hidden', s.id !== 'tab-' + name));
   $('#fab').classList.toggle('hidden', name !== 'kast');
   $('#page-title').textContent = { kast: 'Mijn kast', outfit: 'Today’s look', instellingen: 'Instellingen' }[name];
+  $('#page-title').classList.toggle('swash', name === 'outfit');
   window.scrollTo(0, 0);
   if (name === 'kast') renderKast();
   if (name === 'outfit') rerenderKeepScroll();

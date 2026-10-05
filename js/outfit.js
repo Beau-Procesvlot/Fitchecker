@@ -37,7 +37,8 @@ function colorScore(parts) {
   const prints = parts.filter(i => i.color === 'print').length;
   const hues = colors.filter(c => !c.neutral && !c.print).map(c => c.hue);
   const accents = hues.length + prints;
-  if (prints > 1) return { score: -1, accents, why: 'Twee prints tegelijk is druk.' };
+  // Twee prints vermijden zolang er iets anders kan (zware aftrek); lukt het niet, dan neutraal benoemen.
+  if (prints > 1) return { score: -4, accents, why: 'Print op print: een statement. De rest houden we simpel.' };
   if (accents === 0) {
     const tonal = colors.length <= 2;
     return { score: tonal ? 3.5 : 3, accents, why: pick(tonal ? WHY.tonal : WHY.neutral) };
@@ -363,7 +364,7 @@ function coatAdvice(ctx) {
   if (ctx.level === 'koud') return { need: 'ja', text: 'Jas nodig', why: `koud${feels}${ctx.rain ? ' en kans op regen' : ''}` };
   if (ctx.rain) return { need: 'ja', text: 'Jas nodig', why: ctx.rainPct ? `${ctx.rainPct}% kans op regen` : 'kans op regen' };
   if (ctx.level === 'mild' && ctx.windy) return { need: 'handig', text: 'Jas handig', why: 'het waait flink' };
-  return { need: 'nee', text: 'Geen jas nodig', why: ctx.level === 'warm' ? 'lekker warm' : 'droog en niet koud' };
+  return { need: 'nee', text: 'Geen jas nodig', why: ctx.level === 'warm' ? 'lekker warm' : 'droog en mild' };
 }
 
 function coatHTML(ctx) {
@@ -384,6 +385,61 @@ function lookItemHTML(slot, it, nr, lookIdx) {
   </li>`;
 }
 
+// ---------- Versiering van de look-kaart ----------
+const svgIcon = (d, size = 18) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const SITUATION_ICONS = {
+  sport: 'M6 8v8M3 10v4M18 8v8M21 10v4M6 12h12',
+  school: 'M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z',
+  werk: 'M4 8h16v11H4zM9 8V5h6v3M4 13h16',
+  stad: 'M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0',
+  date: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z',
+  verjaardag: 'M4 10h16v10H4zM3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0',
+  stap: 'M7 4h10l-5 7zM12 11v8M8 20h8',
+  etentje: 'M7 3v7a2 2 0 0 0 4 0V3M9 10v11M16 3c-2 2-2 6 0 8v10',
+  festival: 'M9 18V6l10-2v12M9 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM19 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0z',
+  formeel: 'M3 8l7 4-7 4zM21 8l-7 4 7 4zM10 11h4v2h-4z',
+  sollicitatie: 'M10 3h4l-1 3 2 11-3 4-3-4 2-11z',
+  thuis: 'M4 11l8-7 8 7v9H4zM10 20v-6h4v6',
+  eigen: 'M12 3l2.5 6 6.5.5-5 4 1.5 6.5L12 17l-5.5 3 1.5-6.5-5-4 6.5-.5z',
+};
+const WEATHER_ICONS = {
+  zon: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',
+  zonwolk: 'M8 4v1.5M3.5 8.5H5M5 5l1 1M11 5l-1 1M8 7a2.5 2.5 0 0 0-2.4 3.2M8 19h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.3A3 3 0 0 0 8 19z',
+  wolk: 'M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 7 18z',
+  regen: 'M7 15h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 7 15zM9 18l-1 3M13 18l-1 3M17 18l-1 3',
+  binnen: 'M4 11l8-7 8 7v9H4z',
+};
+function weatherIcon(ctx) {
+  if (!ctx || ctx.indoor) return WEATHER_ICONS.binnen;
+  if (ctx.rain) return WEATHER_ICONS.regen;
+  return { warm: WEATHER_ICONS.zon, mild: WEATHER_ICONS.zonwolk, koud: WEATHER_ICONS.wolk }[ctx.level];
+}
+
+const DOODLES = [
+  'M4 18h16l-1-9-4 4-3-6-3 6-4-4z',                                                     // kroontje
+  'M12 3l2.5 6 6.5.5-5 4 1.5 6.5L12 17l-5.5 3 1.5-6.5-5-4 6.5-.5z',                       // ster
+  'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z',                       // hartje
+  'M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M6 18l3-3M15 9l3-3',                    // sparkle
+];
+// Handgetekend pijltje (eigen viewBox, zodat het groot genoeg is)
+const arrowSVG = cls => `<svg class="arrow ${cls}" viewBox="0 0 40 40" width="44" height="44" aria-hidden="true"><path d="M8 5c12 3 20 13 15 27M23 32l-7-2M23 32l2-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+// Twee handgeschreven notities bij het poppetje: het gevoel, en de stijl in twee woorden.
+const FEEL_BY_SITUATION = {
+  sport: 'Comfort', school: 'Easy', werk: 'Sharp', stad: 'Stad-proof', date: 'Date night',
+  verjaardag: 'Feestje!', stap: 'Party ready', etentje: 'Dinner look', festival: 'Festival vibes',
+  formeel: 'Dressed up', sollicitatie: 'Sharp', thuis: 'Cozy',
+};
+function lookNotes(look, ctx) {
+  const wish = ctx?.search?.recognized?.[0];
+  const feel = wish ? wish[0].toUpperCase() + wish.slice(1) : (FEEL_BY_SITUATION[ctx?.sitId] || 'Jouw look');
+  const style = { casual: 'Casual', net: 'Netjes', sport: 'Sportief', feest: 'Feest' }[ctx?.styles?.[0]] || 'Casual';
+  const col = colorScore(Object.values(look.parts));
+  const word = col.accents === 0 ? 'clean' : col.accents === 1 ? 'pop' : 'bold';
+  return [feel, `${style} & ${word}`];
+}
+
 function renderLooks(message) {
   $('#looks-empty').classList.toggle('hidden', looks.length > 0 || !message);
   $('#looks-start').classList.toggle('hidden', looks.length > 0 || !!message);
@@ -391,18 +447,29 @@ function renderLooks(message) {
   $('#looks-empty').textContent = message || '';
   $('#look-actions').classList.toggle('hidden', !looks.length);
 
-  const left = lookCtx ? esc(lookCtx.label) : '';
-  const right = lookCtx ? esc(lookCtx.weatherText || '') : '';
+  // Kort label in het pilletje: 'School / studie' wordt 'School'.
+  const sitLabel = lookCtx ? esc(lookCtx.label.replace(/ · morgen$/, '').split(' / ')[0]) : '';
+  const sitIcon = SITUATION_ICONS[lookCtx?.sitId] || SITUATION_ICONS.eigen;
+  const weather = lookCtx ? esc(lookCtx.weatherText || '') : '';
   $('#looks').innerHTML = looks.map((look, i) => {
     const slots = MAIN_ORDER.filter(s => look.parts[s]);
+    const [feel, styleNote] = lookNotes(look, lookCtx);
     return `<article class="look ${i === activeLook ? 'active' : ''}">
-      <div class="look-meta"><span>${left}</span><span>${right}</span></div>
+      <div class="look-meta">
+        <span class="sit-pill">${sitLabel}${svgIcon(sitIcon, 16)}</span>
+        <span class="weather-tag">${svgIcon(weatherIcon(lookCtx), 20)}${weather}</span>
+      </div>
       <h2 class="look-title" style="color:${titleColor(look.parts)}">Look ${i + 1}</h2>
       <p class="look-why">${look.why}</p>
       ${coatHTML(lookCtx)}
       <div class="look-body">
         <ol class="look-items">${slots.map((s, n) => lookItemHTML(s, look.parts[s], n + 1, i)).join('')}</ol>
-        <div class="look-figure">${figureSVG(look.parts)}</div>
+        <div class="look-figure">
+          <span class="note note-top">${esc(feel)}${arrowSVG('down-left')}</span>
+          ${figureSVG(look.parts)}
+          <span class="note note-side">${esc(styleNote)}${arrowSVG('down-right')}</span>
+          <span class="doodle">${svgIcon(DOODLES[i % DOODLES.length], 34)}</span>
+        </div>
       </div>
     </article>`;
   }).join('');

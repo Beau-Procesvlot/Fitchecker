@@ -108,9 +108,19 @@ function detectColors(cv) {
   // Effen (ook met schaduw) en kleurvlakken wisselen nauwelijks (< 0.02); ruit, strepen en
   // bloemen rond 0.15. Alleen tellen als er naast de hoofdkleur echt andere kleur in zit.
   const others = 100 - (ranked[0]?.pct || 0);
-  const print = (kept.length >= 3 && kept[0].pct < 60) || (busy > 0.12 && others >= 15);
+  // Tinten van één kleurfamilie (kreukels, schaduw, een vervaagde spijkerbroek) zijn geen print.
+  const oneFamily = COLOR_FAMILIES.some(f => kept.every(c => f.includes(c.id)));
+  const print = !oneFamily && ((kept.length >= 3 && kept[0].pct < 60) || (busy > 0.12 && others >= 15));
   return { colors, color: print ? 'print' : (colors[0]?.id || 'zwart') };
 }
+
+const COLOR_FAMILIES = [
+  ['denim', 'blauw', 'lichtblauw', 'navy', 'grijs'],
+  ['wit', 'creme', 'beige', 'grijs'],
+  ['zwart', 'navy', 'grijs'],
+  ['bruin', 'beige', 'olijf'],
+  ['rood', 'bordeaux', 'roze'],
+];
 
 // "Redmean"-afstand: simpel en dichter bij hoe ogen kleur zien dan gewone RGB-afstand.
 function colorDistance([r1, g1, b1], [r2, g2, b2]) {
