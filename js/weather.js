@@ -63,17 +63,20 @@ const Weather = (() => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  // Weer over een tijdvenster. Loopt het venster over middernacht (22:00–03:00), dan telt de volgende dag mee.
-  // Voor vandaag tellen uren die al voorbij zijn niet mee (de koude ochtend is niet meer relevant).
+  // Weer over het logische moment van een situatie (overdag voor werk, 's avonds voor een feest).
+  // Loopt het over middernacht (22:00–03:00), dan telt de volgende dag mee.
+  // Voor vandaag tellen uren die al voorbij zijn niet mee; is het moment helemaal voorbij,
+  // dan kijkt de app naar de komende 6 uur.
   async function forWindow(dayOffset, from, to) {
     const fc = await load();
     const start = `${dateStr(dayOffset)}T${from}`;
-    const end = to > from ? `${dateStr(dayOffset)}T${to}` : `${dateStr(dayOffset + 1)}T${to}`;
+    let end = to > from ? `${dateStr(dayOffset)}T${to}` : `${dateStr(dayOffset + 1)}T${to}`;
     let startHour = start.slice(0, 14) + '00';
     const now = new Date();
-    const nowHour = `${dateStr(0)}T${String(now.getHours()).padStart(2, '0')}:00`;
+    const hourStr = d => `${dateStr(Math.round((new Date(d.toDateString()) - new Date(now.toDateString())) / 86400000))}T${String(d.getHours()).padStart(2, '0')}:00`;
+    const nowHour = hourStr(now);
     if (dayOffset === 0 && nowHour > startHour) startHour = nowHour;
-    if (dayOffset === 0 && end < nowHour) throw new Error('Dit tijdstip is vandaag al voorbij. Kies ‘Morgen’ of pas de tijd aan.');
+    if (dayOffset === 0 && end < nowHour) end = hourStr(new Date(now.getTime() + 6 * 3600 * 1000));
     const hours = fc.hours.filter(h => h.time >= startHour && h.time <= end);
     if (!hours.length) throw new Error('Geen weerbericht voor dat moment.');
     return {

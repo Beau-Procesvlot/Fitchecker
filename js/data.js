@@ -116,7 +116,7 @@ const DAY_TYPES = [
 const SITUATIONS = [
   { id: 'school',      day: 'normaal',   label: 'School / studie',       from: '07:30', to: '16:00', formality: 1 },
   { id: 'werk',        day: 'normaal',   label: 'Werk / bijbaan',        from: '09:00', to: '17:00', formality: 1, askFormality: true },
-  { id: 'sport',       day: 'normaal',   label: 'Sporten',               from: '18:00', to: '19:30', formality: 0 },
+  { id: 'sport',       day: 'normaal',   label: 'Sporten',               from: '18:00', to: '19:30', formality: 0, indoor: true },
   { id: 'stad',        day: 'normaal',   label: 'Stad / boodschappen',   from: '12:00', to: '17:00', formality: 1 },
   { id: 'date',        day: 'bijzonder', label: 'Date',                  from: '19:00', to: '23:00', formality: 2, askFormality: true },
   { id: 'verjaardag',  day: 'bijzonder', label: 'Verjaardag / feestje',  from: '20:00', to: '00:00', formality: 2, party: true },

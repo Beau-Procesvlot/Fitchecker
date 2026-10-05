@@ -84,9 +84,6 @@ function renderDetails() {
   const sit = plan.situation;
   const indoor = !!sit.indoor;
   renderChips($('#when-chips'), [{ id: 0, label: 'Vandaag' }, { id: 1, label: 'Morgen' }], id => plan.dayOffset === id, id => { plan.dayOffset = id; renderDetails(); });
-  $('#time-from').value = plan.from;
-  $('#time-to').value = plan.to;
-  $('#row-time').classList.toggle('hidden', indoor);
   $('#row-transport').classList.toggle('hidden', indoor);
   renderChips($('#transport-chips'), TRANSPORT, id => plan.transport === id, id => { plan.transport = id; renderDetails(); });
   $('#row-formality').classList.toggle('hidden', !sit.askFormality);
@@ -98,8 +95,6 @@ function renderDetails() {
   renderChips($('#manual-chips'), WEATHER, id => plan.manualLevel === id, id => { plan.manualLevel = id; renderDetails(); });
 }
 
-$('#time-from').onchange = e => { plan.from = e.target.value; };
-$('#time-to').onchange = e => { plan.to = e.target.value; };
 
 // ---------- Zoekwoorden ----------
 function parseSearch(text) {
@@ -195,7 +190,7 @@ $('#plan-go').onclick = async () => {
   saveProfile();
   $('#plan-dialog').close();
   const mood = plan.mood !== 'geen' ? MOODS.find(m => m.id === plan.mood)?.label.toLowerCase() : '';
-  $('#plan-summary-text').textContent = [sit.label, mood, plan.dayOffset ? 'morgen' : 'vandaag', sit.indoor ? '' : `${plan.from}–${plan.to}`, ctx.weatherText].filter(Boolean).join(' · ');
+  $('#plan-summary-text').textContent = [sit.label, mood, plan.dayOffset ? 'morgen' : 'vandaag', ctx.weatherText].filter(Boolean).join(' · ');
   showTab('outfit');
   generateLooks(ctx);
 };
@@ -207,22 +202,21 @@ $('#plan-close').onclick = () => $('#plan-dialog').close();
 // ---------- Eigen situaties ----------
 let sitDraft = null;
 function openSituationEditor(day) {
-  sitDraft = { day, formality: 1, from: '12:00', to: '17:00' };
+  sitDraft = { day, formality: 1, when: 'dag' };
   $('#s-name').value = '';
-  $('#s-from').value = sitDraft.from;
-  $('#s-to').value = sitDraft.to;
   renderSituationEditor();
   $('#sit-editor').showModal();
 }
 function renderSituationEditor() {
   renderChips($('#s-day'), DAY_TYPES.filter(d => d.id !== 'thuis'), id => sitDraft.day === id, id => { sitDraft.day = id; renderSituationEditor(); });
+  renderChips($('#s-when'), [{ id: 'dag', label: 'Overdag' }, { id: 'avond', label: "'s Avonds" }], id => sitDraft.when === id, id => { sitDraft.when = id; renderSituationEditor(); });
   renderChips($('#s-formality'), [{ id: 0, label: 'Sportief' }, ...FORMALITY_OPTIONS], id => sitDraft.formality === id, id => { sitDraft.formality = id; renderSituationEditor(); });
 }
 $('#s-cancel').onclick = () => $('#sit-editor').close();
 $('#s-save').onclick = async () => {
   const label = $('#s-name').value.trim();
   if (!label) { $('#s-name').focus(); return; }
-  const sit = { id: 'eigen-' + newId(), day: sitDraft.day, label, from: $('#s-from').value || '12:00', to: $('#s-to').value || '17:00', formality: sitDraft.formality, custom: true };
+  const sit = { id: 'eigen-' + newId(), day: sitDraft.day, label, ...(sitDraft.when === 'avond' ? { from: '19:00', to: '00:00' } : { from: '08:00', to: '18:00' }), formality: sitDraft.formality, custom: true };
   state.profile.customSituations = [...(state.profile.customSituations || []), sit];
   await saveProfile();
   $('#sit-editor').close();
