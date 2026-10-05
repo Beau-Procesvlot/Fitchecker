@@ -108,19 +108,38 @@ function fitsWeather(it, ctx) {
   return true;
 }
 
-// Kandidaten per plek. Eerst streng (stijl + weer), dan steeds soepeler,
-// zodat er met een kleine kast toch iets uitkomt.
+// Welke stijlen mogen samen in een outfit. Sportief mixt met niets anders; strikt netjes
+// (sollicitatie) alleen met netjes; casual en feest kunnen breder mixen (smart casual).
+const STYLE_COMPAT = {
+  sport: ['sport'],
+  casual: ['casual', 'net', 'feest'],
+  net: ['net'],
+  feest: ['feest', 'net', 'casual'],
+};
+function allowedStyles(ctx) {
+  return [...new Set(ctx.styles.flatMap(s => STYLE_COMPAT[s] || [s]))];
+}
+const fitsStyle = (it, ctx) => it.styles.some(s => allowedStyles(ctx).includes(s));
+
+// Kandidaten per plek. De stijl is een harde eis: nooit terugvallen op stukken die er niet
+// bij passen (geen spijkerbroek bij het sporten). Het weer mag wel soepeler als het moet.
 function candidates(slot, ctx) {
-  let all = state.items.filter(i => !i.inWash && slotOf(i) === slot);
+  let all = state.items.filter(i => !i.inWash && slotOf(i) === slot && fitsStyle(i, ctx));
   if (ctx.rain && slot === 'shoes') all = all.filter(i => i.categoryId !== 'sandalen').length ? all.filter(i => i.categoryId !== 'sandalen') : all;
-  const strict = all.filter(i => i.styles.some(s => ctx.styles.includes(s)) && fitsWeather(i, ctx));
+  const strict = all.filter(i => fitsWeather(i, ctx));
   if (strict.length) return strict;
-  // Een jurk of accessoire is optioneel: past er niets bij de situatie, dan liever geen
-  // (geen zomerjurk bij het sporten). Alleen als er geen boven- en onderstuk is, toch een jurk.
-  if (slot === 'acc') return [];
-  if (slot === 'full' && state.items.some(i => !i.inWash && ['base', 'bottom'].includes(slotOf(i)))) return [];
-  const byWeather = all.filter(i => fitsWeather(i, ctx));
-  return byWeather.length ? byWeather : all;
+  // Een jurk of accessoire is optioneel: past er niets bij het weer, dan liever geen.
+  if (slot === 'acc' || slot === 'full') return [];
+  return all;
+}
+
+// Wat ontbreekt er om voor deze situatie iets samen te stellen? Voor een eerlijke melding.
+function missingFor(ctx) {
+  const has = slot => state.items.some(i => !i.inWash && slotOf(i) === slot && fitsStyle(i, ctx));
+  const style = ctx.styles.map(s => STYLES.find(x => x.id === s)?.label.toLowerCase()).join(' of ');
+  if (has('full') || (has('base') && has('bottom'))) return null;
+  const need = !has('base') && !has('bottom') ? 'een bovenstuk en een broek of rok' : !has('base') ? 'een bovenstuk' : 'een broek of rok';
+  return `Voor deze look mist nog ${need} met de stijl ${style}. Voeg er een toe, of geef een stuk dat je hebt die stijl (via Bewerken).`;
 }
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -173,6 +192,10 @@ function buildLook(c, used, taken, ctx) {
     if (c.acc.length && Math.random() < 0.4) o.acc = pick(c.acc);
     const parts = Object.values(o);
     if (!parts.length) continue;
+    // Stukken die qua netheid niets met elkaar te maken hebben (joggingbroek + nette schoenen)
+    // nooit samen. Spijkerbroek + blazer (verschil 2) mag wel.
+    const fs = parts.filter(i => slotOf(i) !== 'acc').map(itemFormality);
+    if (Math.max(...fs) - Math.min(...fs) > 2) continue;
     const key = parts.map(i => i.id).sort().join();
     if (taken.has(key)) continue;
     const s = scoreLook(o, used, ctx);
@@ -180,14 +203,10 @@ function buildLook(c, used, taken, ctx) {
     if (!best || s.score > best.score) best = { parts: o, why: s.why, score: s.score, key };
   }
   if (!best) return null;
-  // De jas staat los: voorstellen als het weer erom vraagt, en altijd bij regen.
-  if (!ctx.indoor && c.outer.length && (ctx.level !== 'warm' || ctx.rain)) {
-    best.parts.outer = (ctx.level === 'koud' && c.outer.find(j => j.warmth === 3)) || pick(c.outer);
-  }
+  // De jas zit niet in de look; bovenaan staat of je er een nodig hebt (zie coatAdvice).
   // Koud maar geen trui of vest in de kast? Eerlijk zeggen, in plaats van doen alsof het klopt.
   if (ctx.level === 'koud' && !ctx.indoor && !best.parts.mid) best.why.unshift('Het is koud: een trui of vest eroverheen zou fijn zijn, maar die staat nog niet in je kast.');
-  if (ctx.rain) best.why.push('Regen verwacht: jas mee.');
-  else if (ctx.windy && best.parts.mid) best.why.push('Het waait flink, dus een laag extra.');
+  if (ctx.windy && best.parts.mid) best.why.push('Het waait flink, dus een laag extra.');
   best.why = best.why.slice(0, 2).join(' ');
   return best;
 }
@@ -197,6 +216,12 @@ function generateLooks(ctx) {
   if (!state.items.some(i => !i.inWash)) {
     looks = [];
     renderLooks(state.items.length ? 'Alles zit in de wasmand. Tijd voor een wasje?' : 'Je kast is nog leeg. Voeg eerst wat kleding toe.');
+    return;
+  }
+  const missing = missingFor(ctx);
+  if (missing) {
+    looks = [];
+    renderLooks(missing);
     return;
   }
   const c = Object.fromEntries(SLOTS.map(s => [s.id, candidates(s.id, ctx)]));
@@ -240,10 +265,25 @@ function titleColor(parts) {
 
 // ---------- Weergave ----------
 
+// Jas: geen stuk in de look, maar een advies op basis van het weer.
+function coatAdvice(ctx) {
+  if (!ctx || ctx.indoor) return null;
+  const feels = ctx.minFeels !== undefined ? `, voelt als ${ctx.minFeels}°` : '';
+  if (ctx.level === 'koud') return { need: 'ja', text: 'Jas nodig', why: `koud${feels}${ctx.rain ? ' en kans op regen' : ''}` };
+  if (ctx.rain) return { need: 'ja', text: 'Jas nodig', why: ctx.rainPct ? `${ctx.rainPct}% kans op regen` : 'kans op regen' };
+  if (ctx.level === 'mild' && ctx.windy) return { need: 'handig', text: 'Jas handig', why: 'het waait flink' };
+  return { need: 'nee', text: 'Geen jas nodig', why: ctx.level === 'warm' ? 'lekker warm' : 'droog en niet koud' };
+}
+
+function coatHTML(ctx) {
+  const a = coatAdvice(ctx);
+  if (!a) return '';
+  return `<p class="coat coat-${a.need}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 3l3 3 3-3 4 2 2 6-3 1v9H6v-9L3 11l2-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 6v15" stroke="currentColor" stroke-width="1.6"/></svg><strong>${a.text}</strong><span>${a.why}</span></p>`;
+}
+
 function lookItemHTML(slot, it, nr, lookIdx) {
-  const needCoat = lookCtx && !lookCtx.indoor && (lookCtx.level === 'koud' || lookCtx.rain);
-  const label = slot === 'outer' ? (needCoat ? 'Jas · nodig vandaag' : 'Jas · optioneel') : (categoryById(it.categoryId)?.name || '');
-  return `<li class="look-item ${slot === 'outer' && !needCoat ? 'optional' : ''}">
+  const label = categoryById(it.categoryId)?.name || '';
+  return `<li class="look-item">
     <span class="nr">${nr}</span>
     ${it.photoBack
       ? `<div class="look-pic flippable" data-front="${it.photo}" data-back="${it.photoBack}" title="Tik voor de achterkant">${pictureHTML(it)}<span class="flip-badge">↻</span></div>`
@@ -264,11 +304,11 @@ function renderLooks(message) {
   const right = lookCtx ? esc(lookCtx.weatherText || '') : '';
   $('#looks').innerHTML = looks.map((look, i) => {
     const slots = MAIN_ORDER.filter(s => look.parts[s]);
-    if (look.parts.outer) slots.push('outer');
     return `<article class="look ${i === activeLook ? 'active' : ''}">
       <div class="look-meta"><span>${left}</span><span>${right}</span></div>
       <h2 class="look-title" style="color:${titleColor(look.parts)}">Look ${i + 1}</h2>
       <p class="look-why">${look.why}</p>
+      ${coatHTML(lookCtx)}
       <div class="look-body">
         <ol class="look-items">${slots.map((s, n) => lookItemHTML(s, look.parts[s], n + 1, i)).join('')}</ol>
         <div class="look-figure">${figureSVG(look.parts)}</div>
@@ -303,7 +343,7 @@ async function restoreLastLooks() {
   if (!saved || Date.now() - saved.at > 2 * 3600 * 1000) return false;
   const byId = id => state.items.find(i => i.id === id);
   looks = saved.looks
-    .map(l => ({ why: l.why, parts: Object.fromEntries(Object.entries(l.parts).map(([s, id]) => [s, byId(id)]).filter(([, it]) => it)) }))
+    .map(l => ({ why: l.why, parts: Object.fromEntries(Object.entries(l.parts).filter(([s]) => s !== 'outer').map(([s, id]) => [s, byId(id)]).filter(([, it]) => it)) }))
     .filter(l => Object.keys(l.parts).length);
   if (!looks.length) return false;
   lookCtx = saved.ctx;
@@ -333,18 +373,25 @@ function rerenderKeepScroll() {
 function openSwap(lookIdx, slot) {
   const look = looks[lookIdx];
   const current = look.parts[slot];
-  const options = state.items.filter(i => !i.inWash && slotOf(i) === slot && i.id !== current.id);
-  $('#swap-title').textContent = slot === 'outer' ? 'Andere jas' : `Ander stuk voor ${slotById(slot).label.toLowerCase()}`;
+  // Alleen stukken die bij de stijl van deze situatie passen, en qua netheid bij de rest.
+  const others = Object.entries(look.parts).filter(([s]) => s !== slot && s !== 'acc').map(([, it]) => itemFormality(it));
+  const fitsRest = i => {
+    const fs = [...others, itemFormality(i)];
+    return Math.max(...fs) - Math.min(...fs) <= 2;
+  };
+  const options = state.items.filter(i => !i.inWash && slotOf(i) === slot && i.id !== current.id
+    && (!lookCtx || fitsStyle(i, lookCtx)) && (slot === 'acc' || fitsRest(i)));
+  $('#swap-title').textContent = `Ander stuk voor ${slotById(slot).label.toLowerCase()}`;
   $('#swap-list').innerHTML = options.length
     ? options.map(it => `<button class="swap-option" data-id="${it.id}"><div class="pic">${pictureHTML(it)}</div><span>${esc(itemTitle(it))}</span></button>`).join('')
-    : '<p class="muted">Je hebt hier nog geen ander stuk voor. Voeg er een toe aan je kast.</p>';
+    : '<p class="muted">Je hebt hier nog geen ander stuk voor dat bij deze look past. Voeg er een toe aan je kast.</p>';
   $('#swap-list').querySelectorAll('.swap-option').forEach(b => b.onclick = () => {
     look.parts[slot] = state.items.find(i => i.id === b.dataset.id);
-    look.why = colorScore(Object.entries(look.parts).filter(([s]) => s !== 'outer').map(([, it]) => it)).why;
+    look.why = colorScore(Object.values(look.parts)).why;
     $('#swap').close();
     rerenderKeepScroll();
   });
-  $('#swap-remove').classList.toggle('hidden', !['outer', 'acc', 'mid'].includes(slot));
+  $('#swap-remove').classList.toggle('hidden', !['acc', 'mid'].includes(slot));
   $('#swap-remove').onclick = () => {
     delete look.parts[slot];
     $('#swap').close();
@@ -356,9 +403,8 @@ function openSwap(lookIdx, slot) {
 $('#wear-look').onclick = async () => {
   const look = looks[activeLook];
   if (!look) return;
-  // De jas telt niet mee: die neem je vaak wel of niet mee, los van de outfit.
   for (const [slot, it] of Object.entries(look.parts)) {
-    if (slot === 'outer' || it.worn?.[it.worn.length - 1] === today()) continue;
+    if (it.worn?.[it.worn.length - 1] === today()) continue;
     const updated = { ...it, worn: [...(it.worn || []), today()] };
     await saveItem(updated);
     look.parts[slot] = updated;

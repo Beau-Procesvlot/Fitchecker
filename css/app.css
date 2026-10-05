@@ -390,6 +390,18 @@ dialog.welcome::backdrop { background: var(--paper); }
   100% { filter: none; opacity: 1; }
 }
 
+/* Jas-advies bovenaan een look */
+.coat {
+  display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+  margin: -4px auto 12px; padding: 5px 12px; width: fit-content; max-width: 100%;
+  border-radius: 999px; font-size: .8rem;
+}
+.coat strong { font-weight: 600; }
+.coat span { color: inherit; opacity: .75; }
+.coat-ja { background: var(--ink); color: var(--paper); }
+.coat-handig { background: var(--soft); color: var(--ink); }
+.coat-nee { border: 1px solid var(--line); color: var(--muted); }
+
 /* ---------- Achterkant en omdraaien ---------- */
 .back-row { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
 .back-area {

@@ -175,6 +175,8 @@ $('#plan-go').onclick = async () => {
       const w = await Weather.forWindow(plan.dayOffset, plan.from, plan.to);
       Object.assign(ctx, Weather.classify(w, { koukleum: state.profile.koukleum, transport: plan.transport }));
       ctx.weatherText = Weather.describe(w);
+      ctx.minFeels = Math.round(w.minFeels);
+      ctx.rainPct = w.rain;
       plan.weatherError = null;
     } catch (err) {
       plan.weatherError = `${err.message} Kies het weer zelf:`;

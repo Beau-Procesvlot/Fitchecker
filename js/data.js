@@ -123,7 +123,7 @@ const SITUATIONS = [
   { id: 'stap',        day: 'bijzonder', label: 'Avond op stap',         from: '22:00', to: '03:00', formality: 2, party: true },
   { id: 'etentje',     day: 'bijzonder', label: 'Etentje',               from: '19:00', to: '23:00', formality: 2, askFormality: true },
   { id: 'festival',    day: 'bijzonder', label: 'Festival',              from: '12:00', to: '23:00', formality: 1, party: true },
-  { id: 'formeel',     day: 'bijzonder', label: 'Bruiloft / formeel',    from: '14:00', to: '00:00', formality: 3 },
+  { id: 'formeel',     day: 'bijzonder', label: 'Bruiloft / formeel',    from: '14:00', to: '00:00', formality: 3, party: true },
   { id: 'sollicitatie', day: 'bijzonder', label: 'Sollicitatie / presentatie', from: '09:00', to: '12:00', formality: 3 },
   { id: 'thuis',       day: 'thuis',     label: 'Thuis chillen',         from: '09:00', to: '22:00', formality: 0, indoor: true },
 ];
