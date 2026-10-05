@@ -204,6 +204,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Vraag de browser om de kast niet zomaar op te ruimen bij weinig ruimte.
   navigator.storage?.persist?.().catch(() => {});
   plan.transport = state.profile.transport;
+  await loadFavoriteKeys();
+  updateFavButton();
+  // Stukken die nog niet zijn uitgeknipt (bijvoorbeeld na het terugzetten van een back-up) alsnog doen.
+  if (state.profile.cutoutReady) Cutout.enqueueAll(false);
   showTab('kast');
   // Eerste keer: welkomstscherm. Daarna opent de app met "Wat wordt de look vandaag?".
   if (!state.profile.onboarded) openWelcome();

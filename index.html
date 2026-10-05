@@ -63,6 +63,7 @@
       <p class="q">Klaar voor een nieuwe look?</p>
       <p class="muted">Vertel waar je heen gaat en hoe je je voelt. De app checkt het weer en stelt looks samen.</p>
       <button class="btn primary" id="open-planner">Wat wordt de look vandaag?</button>
+      <button class="btn ghost fav-open hidden">Favorieten</button>
     </div>
     <div id="plan-summary" class="plan-summary hidden">
       <span id="plan-summary-text"></span>
@@ -74,6 +75,7 @@
     <div id="look-actions" class="look-actions hidden">
       <button class="btn primary" id="wear-look">Draag ik vandaag</button>
       <button class="btn" id="more-looks">Nieuwe looks</button>
+      <button class="btn ghost fav-open hidden">Favorieten</button>
     </div>
     <section id="why-more" class="why-more hidden"></section>
   </section>
@@ -105,6 +107,11 @@
     </div>
     <p class="muted small">Elke categorie hoort bij een plek op het lichaam. Zo weet de app wat bij elkaar past.</p>
     <div id="cat-list"></div>
+    <h2>Uitknippen</h2>
+    <p class="muted small" id="cutout-info">Voor je looks haalt de app de achtergrond van je kledingfoto's weg.</p>
+    <button class="settings-row" id="cutout-all"><span>Hele kast uitknippen</span><span class="muted">›</span></button>
+    <p class="muted small credit">Uitknippen gebeurt op je telefoon met <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">@imgly/background-removal</a> (AGPL-3.0). De broncode van Fitchecker is openbaar op GitHub.</p>
+
     <h2>Back-up</h2>
     <p class="muted small">Op een iPhone wist Safari je kast als je de app 7 dagen niet opent, tenzij hij op je beginscherm staat. Een back-up is dus slim.</p>
     <button class="settings-row" id="backup-save"><span>Kast opslaan als bestand</span><span class="muted">›</span></button>
@@ -235,6 +242,36 @@
   </div>
 </dialog>
 
+<!-- Uitknippen voorbereiden (eenmalige download) -->
+<dialog id="cutout-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Kleding uitknippen</h2>
+    <p>Voor je looks haalt de app de achtergrond van je kledingfoto's weg, zodat je stukken er strak uitzien, zoals in een modeblad. Je kast blijft je gewone foto's tonen.</p>
+    <p class="muted small">Dit gebeurt op je telefoon zelf: je foto's gaan nergens heen. Daarvoor is eenmalig ongeveer 53 MB nodig, liefst via wifi.</p>
+    <p class="muted small">Tip: al uitgeknipte foto's van je iPhone zelf (vinger op het kledingstuk houden in Foto's → Deel → Bewaar afbeelding) gebruikt de app direct.</p>
+    <div id="cutout-actions" class="actions">
+      <button class="btn primary" id="cutout-yes">Downloaden en uitknippen</button>
+      <button class="btn ghost" id="cutout-no">Later</button>
+    </div>
+    <div id="cutout-progress" class="hidden">
+      <div class="progress"><div class="progress-bar" id="cutout-bar"></div></div>
+      <p class="muted small" id="cutout-progress-label">Downloaden…</p>
+    </div>
+  </div>
+</dialog>
+
+<!-- Favorieten -->
+<dialog id="fav-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Favorieten</h2>
+    <div id="fav-list" class="fav-list"></div>
+  </div>
+</dialog>
+
+<div id="cutout-status" class="cutout-status hidden"></div>
+
 <!-- Stad kiezen voor het weer -->
 <dialog id="city-sheet" class="sheet">
   <div class="sheet-handle"></div>
@@ -347,6 +384,7 @@
 <script src="js/categories.js"></script>
 <script src="js/figure.js"></script>
 <script src="js/weather.js"></script>
+<script src="js/cutout.js"></script>
 <script src="js/outfit.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/onboarding.js"></script>

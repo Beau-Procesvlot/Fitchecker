@@ -18,7 +18,44 @@ async function processPhoto(file) {
   cv.height = Math.round(img.naturalHeight * scale);
   cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
   URL.revokeObjectURL(img.src);
-  return { photo: cv.toDataURL('image/jpeg', 0.82), ratio: cv.height / cv.width, ...detectColors(cv) };
+  const colors = detectColors(cv);
+
+  // Al uitgeknipt door de iPhone (doorzichtige achtergrond)? Dan is dat meteen de uitgeknipte versie,
+  // en krijgt de kast een gewone foto op een lichte achtergrond.
+  if (hasTransparency(cv)) {
+    const cut = trimCutout(cv);
+    const flat = document.createElement('canvas');
+    flat.width = cv.width; flat.height = cv.height;
+    const fctx = flat.getContext('2d');
+    fctx.fillStyle = '#e9e3d6';
+    fctx.fillRect(0, 0, flat.width, flat.height);
+    fctx.drawImage(cv, 0, 0);
+    return { photo: flat.toDataURL('image/jpeg', 0.85), ratio: cv.height / cv.width, cutout: cut?.dataUrl || null, ...colors };
+  }
+  return { photo: cv.toDataURL('image/jpeg', 0.82), ratio: cv.height / cv.width, cutout: null, ...colors };
+}
+
+// Heeft de foto een doorzichtige achtergrond (meer dan 3% doorzichtig)?
+function hasTransparency(cv) {
+  const s = document.createElement('canvas');
+  s.width = s.height = 64;
+  const ctx = s.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(cv, 0, 0, 64, 64);
+  const d = ctx.getImageData(0, 0, 64, 64).data;
+  let clear = 0;
+  for (let i = 3; i < d.length; i += 4) if (d[i] < 200) clear++;
+  return clear > 64 * 64 * 0.03;
+}
+
+// Kleuren van voor- en achterkant samen: de voorkant telt zwaarder (65/35).
+function mergeFrontBack(front, back) {
+  if (!back?.length) return front || [];
+  const sum = {};
+  for (const c of front || []) sum[c.id] = (sum[c.id] || 0) + c.pct * 0.65;
+  for (const c of back) sum[c.id] = (sum[c.id] || 0) + c.pct * 0.35;
+  const list = Object.entries(sum).map(([id, pct]) => ({ id, pct })).sort((a, b) => b.pct - a.pct).filter(c => c.pct >= 8).slice(0, 3);
+  const total = list.reduce((s, c) => s + c.pct, 0) || 1;
+  return list.map(c => ({ id: c.id, pct: Math.round((c.pct / total) * 100) }));
 }
 
 // Herkent tot drie kleuren en of het een print is.
@@ -34,6 +71,15 @@ function detectColors(cv) {
   const px = ctx.getImageData(0, 0, size, size).data;
   const rgb = i => [px[i * 4], px[i * 4 + 1], px[i * 4 + 2]];
   const n = size * size;
+
+  // Uitgeknipt (doorzichtig)? Dan is de achtergrond simpelweg alles wat doorzichtig is.
+  let transparent = 0;
+  for (let i = 0; i < n; i++) if (px[i * 4 + 3] < 128) transparent++;
+  if (transparent > n * 0.03) {
+    const bgAlpha = new Uint8Array(n);
+    for (let i = 0; i < n; i++) bgAlpha[i] = px[i * 4 + 3] < 128 ? 1 : 0;
+    return countColors(px, size, bgAlpha);
+  }
 
   // Gemiddelde randkleur = waarschijnlijk de achtergrond.
   const border = [];
@@ -63,6 +109,14 @@ function detectColors(cv) {
     for (let y = 0; y < size; y++) if (!bg[y * size + x]) { if (first < 0) first = y; last = y; }
     for (let y = first + 1; y < last; y++) bg[y * size + x] = 0;
   }
+
+  return countColors(px, size, bg);
+}
+
+// Telt de kleuren van alles wat geen achtergrond is (bg[i] = 1 is achtergrond).
+function countColors(px, size, bg) {
+  const n = size * size;
+  const rgb = i => [px[i * 4], px[i * 4 + 1], px[i * 4 + 2]];
 
   // Bleef er bijna niets over (stuk vult de hele foto, of lijkt op de achtergrond)? Neem dan het midden.
   let garment = 0;

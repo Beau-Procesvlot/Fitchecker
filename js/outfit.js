@@ -377,9 +377,7 @@ function lookItemHTML(slot, it, nr, lookIdx) {
   const label = categoryById(it.categoryId)?.name || '';
   return `<li class="look-item">
     <span class="nr">${nr}</span>
-    ${it.photoBack
-      ? `<div class="look-pic flippable" data-front="${it.photo}" data-back="${it.photoBack}" title="Tik voor de achterkant">${pictureHTML(it)}<span class="flip-badge">↻</span></div>`
-      : `<div class="look-pic">${pictureHTML(it)}</div>`}
+    ${lookPicHTML(it)}
     <span class="look-label">${esc(label)}</span>
     <button class="swap" data-look="${lookIdx}" data-slot="${slot}" aria-label="Ander stuk kiezen">+</button>
   </li>`;
@@ -440,6 +438,129 @@ function lookNotes(look, ctx) {
   return [feel, `${style} & ${word}`];
 }
 
+// ---------- Uitgeknipte stukken en flat-lay ----------
+// De uitgeknipte versie van een stuk (voor- of achterkant), als die er is.
+function cutoutOf(it, side = 'front') {
+  const c = side === 'back' ? it.cutoutBack : it.cutout;
+  return c && c !== 'mislukt' ? c : null;
+}
+
+// Plaatje in de genummerde lijst: uitgeknipt met stickerrand, anders de gewone foto of kleur.
+function lookPicHTML(it) {
+  const front = cutoutOf(it) || it.photo, back = cutoutOf(it, 'back') || it.photoBack;
+  const cls = cutoutOf(it) ? 'look-pic cut' : 'look-pic';
+  const inner = cutoutOf(it) ? `<img src="${front}" alt="">` : pictureHTML(it);
+  return back
+    ? `<div class="${cls} flippable" data-front="${front}" data-back="${back}" title="Tik voor de achterkant">${inner}<span class="flip-badge">↻</span></div>`
+    : `<div class="${cls}">${inner}</div>`;
+}
+
+// Flat-lay: de stukken neergelegd zoals een stylist dat doet. Vakken in procenten van het vlak.
+const FLATLAY = {
+  full:   { left: 10, top: 0,  width: 80, height: 60 },
+  base:   { left: 2,  top: 0,  width: 62, height: 36 },
+  mid:    { left: 34, top: 6,  width: 64, height: 38 },
+  single: { left: 14, top: 0,  width: 72, height: 38 },
+  bottom: { left: 20, top: 36, width: 60, height: 44 },
+  shoes:  { left: 8,  top: 80, width: 54, height: 18 },
+  acc:    { left: 64, top: 64, width: 34, height: 20 },
+};
+function flatlayHTML(parts) {
+  const layers = [];
+  const add = (slot, box, z) => {
+    const it = parts[slot];
+    if (!it) return;
+    const src = cutoutOf(it);
+    const rot = (seeded(it.id, 'f') * 10 - 5).toFixed(1);
+    const content = src ? `<img src="${src}" alt="">`
+      : it.photo ? `<img class="photo" src="${it.photo}" alt="">`
+      : `<span class="fl-color" style="background:${colorCss(colorById(it.color))}"></span>`;
+    layers.push(`<div class="fl-item ${src ? 'cut' : 'nocut'}" style="left:${box.left}%;top:${box.top}%;width:${box.width}%;height:${box.height}%;--r:${rot}deg;z-index:${z}">${content}</div>`);
+  };
+  if (parts.full) add('full', FLATLAY.full, 2);
+  if (parts.base && parts.mid) { add('base', FLATLAY.base, 2); add('mid', FLATLAY.mid, 3); }
+  else { add('base', FLATLAY.single, 2); add('mid', FLATLAY.single, 3); }
+  add('bottom', FLATLAY.bottom, 1);
+  add('shoes', FLATLAY.shoes, 4);
+  add('acc', FLATLAY.acc, 5);
+  return `<div class="flatlay">${layers.join('')}</div>`;
+}
+
+// Welke weergave: flat-lay als er uitgeknipte stukken zijn, anders het poppetje (of je eigen keuze).
+function lookView(parts) {
+  if (state.profile.lookView) return state.profile.lookView;
+  return Object.values(parts).some(it => cutoutOf(it)) ? 'flatlay' : 'pop';
+}
+
+// ---------- Favorieten ----------
+const favKey = parts => Object.values(parts).map(i => i.id).sort().join();
+async function getFavorites() { return (await DB.getMeta('favorites')) || []; }
+let favoriteKeys = new Set();
+async function loadFavoriteKeys() {
+  favoriteKeys = new Set((await getFavorites()).map(f => Object.values(f.parts).sort().join()));
+}
+
+async function toggleFavorite(look) {
+  const favs = await getFavorites();
+  const key = favKey(look.parts);
+  const i = favs.findIndex(f => Object.values(f.parts).sort().join() === key);
+  if (i >= 0) favs.splice(i, 1);
+  else favs.unshift({
+    id: newId(), at: Date.now(), why: look.why,
+    ctx: lookCtx ? { label: lookCtx.label, sitId: lookCtx.sitId, styles: lookCtx.styles, weatherText: lookCtx.weatherText, indoor: lookCtx.indoor, level: lookCtx.level, rain: lookCtx.rain, windy: lookCtx.windy, minFeels: lookCtx.minFeels, search: lookCtx.search } : null,
+    parts: Object.fromEntries(Object.entries(look.parts).map(([s, it]) => [s, it.id])),
+  });
+  await DB.setMeta('favorites', favs);
+  await loadFavoriteKeys();
+  toast(i >= 0 ? 'Uit je favorieten' : 'Bewaard bij je favorieten');
+  rerenderKeepScroll();
+  updateFavButton();
+}
+
+async function updateFavButton() {
+  const n = (await getFavorites()).length;
+  document.querySelectorAll('.fav-open').forEach(b => { b.textContent = n ? `Favorieten (${n})` : 'Favorieten'; b.classList.toggle('hidden', !n); });
+}
+
+async function openFavorites() {
+  const favs = await getFavorites();
+  const byId = id => state.items.find(i => i.id === id);
+  $('#fav-list').innerHTML = favs.length ? favs.map(f => {
+    const items = Object.values(f.parts).map(byId).filter(Boolean);
+    const thumbs = items.slice(0, 4).map(it => `<span class="fav-thumb">${cutoutOf(it) ? `<img src="${cutoutOf(it)}" alt="">` : pictureHTML(it)}</span>`).join('');
+    const date = new Date(f.at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+    return `<div class="fav-row">
+      <button class="fav-show" data-id="${f.id}"><span class="fav-thumbs">${thumbs}</span>
+        <span class="fav-text"><strong>${esc(f.ctx?.label || 'Look')}</strong><span class="muted small">${date}${items.length < Object.keys(f.parts).length ? ' · niet alles meer in je kast' : ''}</span></span></button>
+      <button class="fav-del" data-id="${f.id}" aria-label="Verwijderen uit favorieten">${heartSVG(true)}</button>
+    </div>`;
+  }).join('') : '<p class="muted">Nog geen favorieten. Tik op het hartje bij een look om hem te bewaren.</p>';
+  $('#fav-list').querySelectorAll('.fav-show').forEach(b => b.onclick = () => {
+    const f = favs.find(x => x.id === b.dataset.id);
+    const parts = Object.fromEntries(Object.entries(f.parts).map(([s, id]) => [s, byId(id)]).filter(([, it]) => it));
+    if (!Object.keys(parts).length) { toast('Deze stukken staan niet meer in je kast'); return; }
+    lookCtx = f.ctx || { label: 'Favoriet', styles: ['casual'], search: parseSearch('') };
+    looks = [{ parts, why: f.why }];
+    activeLook = 0;
+    $('#plan-summary-text').textContent = `Favoriet · ${f.ctx?.label || 'look'}`;
+    $('#fav-sheet').close();
+    showTab('outfit');
+    renderLooks();
+  });
+  $('#fav-list').querySelectorAll('.fav-del').forEach(b => b.onclick = async () => {
+    await DB.setMeta('favorites', favs.filter(f => f.id !== b.dataset.id));
+    await loadFavoriteKeys();
+    openFavorites();
+    updateFavButton();
+    if (looks.length) rerenderKeepScroll();
+  });
+  if (!$('#fav-sheet').open) $('#fav-sheet').showModal();
+}
+
+document.querySelectorAll('.fav-open').forEach(b => b.onclick = openFavorites);
+
+const heartSVG = filled => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
+
 function renderLooks(message) {
   $('#looks-empty').classList.toggle('hidden', looks.length > 0 || !message);
   $('#looks-start').classList.toggle('hidden', looks.length > 0 || !!message);
@@ -454,19 +575,26 @@ function renderLooks(message) {
   $('#looks').innerHTML = looks.map((look, i) => {
     const slots = MAIN_ORDER.filter(s => look.parts[s]);
     const [feel, styleNote] = lookNotes(look, lookCtx);
+    const view = lookView(look.parts);
+    const fav = favoriteKeys.has(favKey(look.parts));
     return `<article class="look ${i === activeLook ? 'active' : ''}">
       <div class="look-meta">
         <span class="sit-pill">${sitLabel}${svgIcon(sitIcon, 16)}</span>
         <span class="weather-tag">${svgIcon(weatherIcon(lookCtx), 20)}${weather}</span>
       </div>
+      <button class="fav-btn ${fav ? 'on' : ''}" data-look="${i}" aria-label="${fav ? 'Uit favorieten' : 'Bewaar als favoriet'}">${heartSVG(fav)}</button>
       <h2 class="look-title" style="color:${titleColor(look.parts)}">Look ${i + 1}</h2>
       <p class="look-why">${look.why}</p>
       ${coatHTML(lookCtx)}
       <div class="look-body">
         <ol class="look-items">${slots.map((s, n) => lookItemHTML(s, look.parts[s], n + 1, i)).join('')}</ol>
-        <div class="look-figure">
+        <div class="look-figure view-${view}">
+          <div class="view-toggle" role="group" aria-label="Weergave">
+            <button data-view="flatlay" class="${view === 'flatlay' ? 'on' : ''}">Flat-lay</button>
+            <button data-view="pop" class="${view === 'pop' ? 'on' : ''}">Pop</button>
+          </div>
           <span class="note note-top">${esc(feel)}${arrowSVG('down-left')}</span>
-          ${figureSVG(look.parts)}
+          ${view === 'flatlay' ? flatlayHTML(look.parts) : figureSVG(look.parts)}
           <span class="note note-side">${esc(styleNote)}${arrowSVG('down-right')}</span>
           <span class="doodle">${svgIcon(DOODLES[i % DOODLES.length], 34)}</span>
         </div>
@@ -474,6 +602,13 @@ function renderLooks(message) {
     </article>`;
   }).join('');
   $('#looks').querySelectorAll('.swap').forEach(b => b.onclick = () => openSwap(+b.dataset.look, b.dataset.slot));
+  $('#looks').querySelectorAll('.fav-btn').forEach(b => b.onclick = () => toggleFavorite(looks[+b.dataset.look]));
+  // Wisselen tussen flat-lay en poppetje; de keuze wordt onthouden.
+  $('#looks').querySelectorAll('.view-toggle button').forEach(b => b.onclick = () => {
+    state.profile.lookView = b.dataset.view;
+    saveProfile();
+    rerenderKeepScroll();
+  });
   // Tik op een stuk met een achterkant: het draait om.
   $('#looks').querySelectorAll('.look-pic.flippable').forEach(p => p.onclick = () => {
     const img = p.querySelector('img');

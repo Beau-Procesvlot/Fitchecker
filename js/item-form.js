@@ -49,7 +49,7 @@ async function openBatchItem(previous) {
   const result = await batch.processed[batch.index];
   draft.processing = false;
   if (result.error) toast(result.error);
-  else Object.assign(draft, { photo: result.photo, ratio: result.ratio, color: result.color, colors: result.colors, colorsFront: result.colors });
+  else Object.assign(draft, { photo: result.photo, ratio: result.ratio, color: result.color, colors: result.colors, colorsFront: result.colors, cutout: result.cutout });
   renderItemForm();
 }
 
@@ -96,7 +96,7 @@ function renderItemForm() {
       : '<span class="back-empty">＋ Achterkant<br><span class="muted">optioneel</span></span>';
   $('#f-back-hint').classList.toggle('hidden', !!draft.photoBack);
   const rm = $('#f-back-remove');
-  if (rm) rm.onclick = e => { e.stopPropagation(); draft.photoBack = null; draft.colorsBack = null; recombineColors(); renderItemForm(); };
+  if (rm) rm.onclick = e => { e.stopPropagation(); draft.photoBack = null; draft.colorsBack = null; draft.cutoutBack = null; recombineColors(); renderItemForm(); };
 
   // Categorieën gegroepeerd per plek, zodat je snel de juiste vindt.
   const cats = sortedCategories();
@@ -118,6 +118,7 @@ function renderItemForm() {
     <button type="button" class="color ${draft.color === c.id ? 'on' : ''}" data-c="${c.id}" title="${c.label}" style="background:${colorCss(c)}"></button>`).join('');
   $('#f-colors').querySelectorAll('button').forEach(b => b.onclick = () => {
     draft.color = b.dataset.c;
+    draft.colorManual = true; // zelf gekozen: niet meer automatisch overschrijven
     if (b.dataset.c !== 'print') draft.colors = [{ id: b.dataset.c, pct: 100 }];
     renderItemForm();
   });
@@ -147,14 +148,7 @@ $('#f-color-fix').onclick = () => { showPalette = true; renderItemForm(); };
 // De kleuren van voor- en achterkant samen: de voorkant telt zwaarder (65/35).
 // De hoofdkleur blijft die van de voorkant; een print op de rug telt mee als kleur.
 function recombineColors() {
-  draft.colors = draft.colorsFront || draft.colors;
-  if (!draft.colorsBack?.length) return;
-  const sum = {};
-  for (const c of draft.colorsFront || []) sum[c.id] = (sum[c.id] || 0) + c.pct * 0.65;
-  for (const c of draft.colorsBack) sum[c.id] = (sum[c.id] || 0) + c.pct * 0.35;
-  const list = Object.entries(sum).map(([id, pct]) => ({ id, pct })).sort((a, b) => b.pct - a.pct).filter(c => c.pct >= 8).slice(0, 3);
-  const total = list.reduce((s, c) => s + c.pct, 0) || 1;
-  draft.colors = list.map(c => ({ id: c.id, pct: Math.round((c.pct / total) * 100) }));
+  draft.colors = mergeFrontBack(draft.colorsFront || draft.colors, draft.colorsBack);
 }
 
 $('#f-back-area').onclick = () => { if (!draft.processingBack) $('#f-back').click(); };
@@ -168,6 +162,7 @@ $('#f-back').onchange = async e => {
     const back = await processPhoto(file);
     if (!draft.colorsFront) draft.colorsFront = draft.colors;
     draft.photoBack = back.photo;
+    draft.cutoutBack = back.cutout; // al uitgeknipt door de iPhone, of null
     draft.colorsBack = back.colors;
     recombineColors();
   } catch (err) {
@@ -187,6 +182,7 @@ $('#f-photo').onchange = async e => {
   renderItemForm();
   try {
     Object.assign(draft, await processPhoto(file));
+    draft.colorManual = false;
     draft.colorsFront = draft.colors;
     recombineColors();
     showPalette = false;
@@ -231,6 +227,8 @@ $('#f-save').onclick = async () => {
   await saveItem(item);
   if (isNew) justAdded.add(item.id);
   renderKast();
+  // Op de achtergrond uitknippen (voor de looks); de kast blijft de gewone foto tonen.
+  Cutout.enqueue(item);
   if (batch.files.length > 1) {
     batch.saved++;
     batch.last = item;

@@ -5,9 +5,16 @@ async function renderSettings() {
   $('#set-koukleum-label').textContent = koukleumLabel(state.profile.koukleum);
   renderLocationStatus();
 
+  const withPhoto = state.items.filter(i => i.photo);
+  const cut = withPhoto.filter(i => cutoutOf(i));
+  $('#cutout-info').textContent = !withPhoto.length
+    ? `Voor je looks haalt de app de achtergrond van je kledingfoto's weg. Je hebt nog geen stukken met een foto.`
+    : `${cut.length} van ${withPhoto.length} stukken met een foto zijn uitgeknipt${Cutout.isBusy() ? ' (bezig…)' : ''}.`;
+  $('#cutout-all').classList.toggle('hidden', !withPhoto.length || cut.length === withPhoto.length);
+
   const own = state.profile.customSituations || [];
   $('#sit-list').innerHTML = own.length
-    ? own.map(s => `<div class="settings-row"><span>${esc(s.label)} <span class="muted small">${DAY_TYPES.find(d => d.id === s.day).label.toLowerCase()} · ${s.from}–${s.to}</span></span><button class="link" data-del="${s.id}">Verwijderen</button></div>`).join('')
+    ? own.map(s => `<div class="settings-row"><span>${esc(s.label)} <span class="muted small">${DAY_TYPES.find(d => d.id === s.day).label.toLowerCase()} · ${s.from >= '17:00' ? "'s avonds" : 'overdag'}</span></span><button class="link" data-del="${s.id}">Verwijderen</button></div>`).join('')
     : '<p class="muted small">Nog geen eigen situaties. Voeg ze toe bij Looks, onder ‘Wat ga je doen?’.</p>';
   $('#sit-list').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     state.profile.customSituations = own.filter(s => s.id !== b.dataset.del);
@@ -83,6 +90,7 @@ $('#c-delete').onclick = async () => {
 };
 
 $('#add-cat').onclick = () => openCategoryEditor(null);
+$('#cutout-all').onclick = () => { Cutout.enqueueAll(); setTimeout(renderSettings, 300); };
 $('#settings-demo').onclick = loadDemo;
 
 $('#set-koukleum').oninput = e => { $('#set-koukleum-label').textContent = koukleumLabel(e.target.value); };
