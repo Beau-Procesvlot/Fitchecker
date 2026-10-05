@@ -87,9 +87,13 @@
       <div class="slider-ends"><span>Snel warm</span><span>Snel koud</span></div>
       <p class="muted small" id="set-koukleum-label"></p>
     </div>
-    <div class="settings-row">
-      <span>Locatie <span class="muted small" id="set-location-status"></span></span>
-      <button class="link" id="set-location">Opnieuw bepalen</button>
+    <div class="settings-block">
+      <p class="label">Locatie voor het weer</p>
+      <p class="loc-status" id="set-location-status">…</p>
+      <div class="row">
+        <button class="btn small" id="set-location">Mijn locatie gebruiken</button>
+        <button class="btn small" id="set-city">Stad kiezen</button>
+      </div>
     </div>
 
     <h2>Eigen situaties</h2>
@@ -228,6 +232,17 @@
         <span>Voor basics, zoals een effen wit T-shirt. Kleur kies je zelf; een foto kan later nog.</span>
       </button>
     </div>
+  </div>
+</dialog>
+
+<!-- Stad kiezen voor het weer -->
+<dialog id="city-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Stad kiezen</h2>
+    <p class="muted small">Het weer wordt dan altijd voor deze stad opgehaald, in plaats van via de locatie van je telefoon.</p>
+    <input type="text" id="city-input" placeholder="Eindhoven" autocomplete="off">
+    <div id="city-results" class="city-results"></div>
   </div>
 </dialog>
 

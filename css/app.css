@@ -615,6 +615,11 @@ dialog.plan-dialog .planner { padding-bottom: 24px; }
 
 .doodle { position: absolute; right: 6px; bottom: 6px; color: #b39c7d; }
 
+/* Locatie in instellingen */
+.loc-status { margin: 0 0 10px; font-size: .9rem; }
+.city-results { margin-top: 12px; }
+#city-input { margin-top: 12px; }
+
 /* Fijnafstemming look-kaart */
 .sit-pill, .weather-tag { white-space: nowrap; }
 .weather-tag { font-size: .78rem; }

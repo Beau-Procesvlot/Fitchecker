@@ -20,6 +20,8 @@ const Weather = (() => {
   }
 
   async function location() {
+    // Zelf gekozen stad gaat voor de locatie van de telefoon.
+    if (state.profile.city) return state.profile.city;
     const saved = await DB.getMeta('location');
     // Ververs op de achtergrond als de locatie ouder is dan 6 uur.
     if (saved && Date.now() - saved.at < 6 * 3600 * 1000) return saved;
@@ -62,11 +64,16 @@ const Weather = (() => {
   }
 
   // Weer over een tijdvenster. Loopt het venster over middernacht (22:00–03:00), dan telt de volgende dag mee.
+  // Voor vandaag tellen uren die al voorbij zijn niet mee (de koude ochtend is niet meer relevant).
   async function forWindow(dayOffset, from, to) {
     const fc = await load();
     const start = `${dateStr(dayOffset)}T${from}`;
     const end = to > from ? `${dateStr(dayOffset)}T${to}` : `${dateStr(dayOffset + 1)}T${to}`;
-    const startHour = start.slice(0, 14) + '00';
+    let startHour = start.slice(0, 14) + '00';
+    const now = new Date();
+    const nowHour = `${dateStr(0)}T${String(now.getHours()).padStart(2, '0')}:00`;
+    if (dayOffset === 0 && nowHour > startHour) startHour = nowHour;
+    if (dayOffset === 0 && end < nowHour) throw new Error('Dit tijdstip is vandaag al voorbij. Kies ‘Morgen’ of pas de tijd aan.');
     const hours = fc.hours.filter(h => h.time >= startHour && h.time <= end);
     if (!hours.length) throw new Error('Geen weerbericht voor dat moment.');
     return {
@@ -102,5 +109,27 @@ const Weather = (() => {
     return parts.join(' · ');
   }
 
-  return { askLocation, forWindow, classify, describe };
+  // Steden zoeken via de geocoding van Open-Meteo (dezelfde dienst als het weer).
+  async function searchCity(name) {
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=nl&format=json`);
+    if (!res.ok) throw new Error('Zoeken lukte niet.');
+    const data = await res.json();
+    return (data.results || []).map(r => ({
+      name: r.name, area: [r.admin1, r.country].filter(Boolean).join(', '),
+      lat: Math.round(r.latitude * 100) / 100, lon: Math.round(r.longitude * 100) / 100,
+    }));
+  }
+
+  // De temperatuur nu, op de locatie die de app gebruikt: om te controleren of het klopt.
+  async function now() {
+    const loc = await location();
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m&timezone=auto`);
+    if (!res.ok) throw new Error('Weer kon niet worden opgehaald.');
+    const data = await res.json();
+    return { loc, temp: Math.round(data.current.temperature_2m) };
+  }
+
+  function forget() { forecast = null; }
+
+  return { askLocation, forWindow, classify, describe, searchCity, now, forget };
 })();

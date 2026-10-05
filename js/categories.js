@@ -3,8 +3,7 @@
 async function renderSettings() {
   $('#set-koukleum').value = state.profile.koukleum;
   $('#set-koukleum-label').textContent = koukleumLabel(state.profile.koukleum);
-  const loc = await DB.getMeta('location');
-  $('#set-location-status').textContent = loc ? `Bekend, bijgewerkt ${new Date(loc.at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}` : 'Nog niet bekend';
+  renderLocationStatus();
 
   const own = state.profile.customSituations || [];
   $('#sit-list').innerHTML = own.length
@@ -92,14 +91,64 @@ $('#set-koukleum').onchange = async e => {
   await saveProfile();
   toast('Opgeslagen');
 };
+// Laat zien welke locatie de app voor het weer gebruikt, met de temperatuur daar nu.
+// Zo zie je meteen of het klopt.
+async function renderLocationStatus() {
+  const el = $('#set-location-status');
+  const city = state.profile.city;
+  const gps = await DB.getMeta('location');
+  if (!city && !gps) { el.textContent = 'Nog geen locatie. Gebruik je locatie of kies een stad.'; return; }
+  const where = city ? `${city.name}${city.area ? `, ${city.area}` : ''}` : `Via je telefoon (${gps.lat.toLocaleString('nl-NL')}; ${gps.lon.toLocaleString('nl-NL')})`;
+  el.textContent = `${where} · even kijken…`;
+  try {
+    const n = await Weather.now();
+    el.textContent = `${where} · nu ${n.temp}°`;
+  } catch {
+    el.textContent = `${where} · weer nu niet op te halen`;
+  }
+}
+
 $('#set-location').onclick = async () => {
   try {
     await DB.setMeta('location', await Weather.askLocation());
+    state.profile.city = null;
+    await saveProfile();
+    Weather.forget();
     toast('Locatie bijgewerkt');
   } catch (err) {
     toast(err.message);
   }
-  renderSettings();
+  renderLocationStatus();
+};
+
+let citySearchTimer;
+$('#set-city').onclick = () => {
+  $('#city-input').value = '';
+  $('#city-results').innerHTML = '';
+  $('#city-sheet').showModal();
+};
+$('#city-input').oninput = e => {
+  clearTimeout(citySearchTimer);
+  const q = e.target.value.trim();
+  if (q.length < 2) { $('#city-results').innerHTML = ''; return; }
+  citySearchTimer = setTimeout(async () => {
+    try {
+      const results = await Weather.searchCity(q);
+      $('#city-results').innerHTML = results.length
+        ? results.map((r, i) => `<button class="settings-row" data-i="${i}"><span>${esc(r.name)} <span class="muted small">${esc(r.area)}</span></span><span class="muted">›</span></button>`).join('')
+        : '<p class="muted small">Geen stad gevonden.</p>';
+      $('#city-results').querySelectorAll('[data-i]').forEach(b => b.onclick = async () => {
+        state.profile.city = results[+b.dataset.i];
+        await saveProfile();
+        Weather.forget();
+        $('#city-sheet').close();
+        toast(`Weer voor ${state.profile.city.name}`);
+        renderLocationStatus();
+      });
+    } catch (err) {
+      $('#city-results').innerHTML = `<p class="muted small">${esc(err.message)}</p>`;
+    }
+  }, 350);
 };
 
 // ---------- Back-up ----------
