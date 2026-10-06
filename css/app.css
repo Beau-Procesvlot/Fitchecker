@@ -876,3 +876,30 @@ dialog.wrapped.wr-light { color: var(--ink); }
 .wr-ink .wr-btn { background: var(--paper); color: var(--ink); border-color: var(--paper); }
 .wr-actions { display: flex; gap: 10px; margin-top: 18px; }
 .wr-actions .btn { flex: 1; }
+
+/* ---------- Wekelijkse tip: als een iPhone-melding ---------- */
+.tip-banner {
+  position: fixed; z-index: 60; inset: auto; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 8px);
+  width: auto; height: auto; max-width: 544px; margin: 0 auto; padding: 12px 40px 12px 12px; border: 0; border-radius: 22px;
+  display: flex; gap: 11px; align-items: flex-start; overflow: visible;
+  background: rgba(246, 244, 240, .86); color: #111;
+  -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18), 0 0 0 .5px rgba(0,0,0,.06);
+  transform: translateY(calc(-100% - 40px)); opacity: 0;
+  transition: transform .5s cubic-bezier(.2, 1.15, .4, 1), opacity .25s ease;
+  touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.tip-banner.hidden { display: none; }
+.tip-banner.in { transform: none; opacity: 1; }
+.tip-banner.out { transform: translateY(calc(-100% - 40px)); opacity: 0; transition: transform .3s ease-in, opacity .3s ease-in; }
+.tip-icon { width: 38px; height: 38px; border-radius: 9px; flex: none; }
+.tip-body { flex: 1; min-width: 0; }
+.tip-body p { margin: 0; }
+.tip-meta { display: flex; justify-content: space-between; font-size: .72rem; letter-spacing: .02em; color: #6d6a64; margin-bottom: 2px !important; }
+.tip-title { font-weight: 600; font-size: .95rem; line-height: 1.25; }
+.tip-text { font-size: .92rem; line-height: 1.3; color: #222; }
+.tip-close {
+  position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.08); color: #444; cursor: pointer;
+}
+.tip-banner .tip-meta span:last-child { margin-right: 4px; }

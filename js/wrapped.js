@@ -230,6 +230,8 @@ async function shareWrapped() {
 // TIJDELIJK (testknop Wrapped): de Wrapped van de lopende maand tot nu toe.
 // Weghalen samen met de knop #wrapped-test in index.html.
 $('#wrapped-test').onclick = () => openWrapped(monthKey(new Date()));
+// TIJDELIJK (testknop tip): de volgende wekelijkse tip meteen tonen. Weghalen samen met #tip-test in index.html.
+$('#tip-test').onclick = () => { state.profile.lastTipAt = 1; maybeTip(); };
 
 // ---------- Instellingen: eerdere Wrapped's terugkijken ----------
 function renderWrappedSettings() {
