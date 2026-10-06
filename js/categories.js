@@ -16,6 +16,8 @@ async function renderSettings() {
   $('#set-koukleum').value = state.profile.koukleum;
   $('#set-koukleum-label').textContent = koukleumLabel(state.profile.koukleum);
   renderLocationStatus();
+  renderBackupInfo();
+  renderWrappedSettings();
 
   const withPhoto = state.items.filter(i => i.photo);
   const cut = withPhoto.filter(i => cutoutOf(i));
@@ -181,14 +183,26 @@ $('#backup-save').onclick = async () => {
   const file = new File([blob], `fitchecker-backup-${today()}.json`, { type: 'application/json' });
   // Op de iPhone opent dit het deelmenu (bewaren in Bestanden, AirDrop…).
   if (navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'Fitchecker back-up' }); return; } catch (err) { if (err.name === 'AbortError') return; }
+    try { await navigator.share({ files: [file], title: 'Fitchecker back-up' }); await backupMade(); return; } catch (err) { if (err.name === 'AbortError') return; }
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = file.name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  await backupMade();
 };
+// Onthouden wanneer de laatste back-up was, voor de maandelijkse herinnering.
+async function backupMade() {
+  state.profile.lastBackupAt = Date.now();
+  await saveProfile();
+  renderBackupNudge();
+  renderBackupInfo();
+}
+function renderBackupInfo() {
+  const at = state.profile.lastBackupAt;
+  $('#backup-info').textContent = at ? `Laatste back-up: ${new Date(at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}.` : 'Je hebt nog geen back-up gemaakt.';
+}
 $('#backup-restore').onclick = () => $('#backup-file').click();
 $('#backup-file').onchange = async e => {
   const file = e.target.files[0];

@@ -42,7 +42,7 @@ const Weather = (() => {
       + `?latitude=${loc.lat}&longitude=${loc.lon}`
       + '&hourly=temperature_2m,apparent_temperature,precipitation_probability,wind_speed_10m'
       + '&timezone=auto&forecast_days=3';
-    const res = await fetch(url);
+    const res = await fetch(url).catch(() => { throw new Error('Geen internet, dus geen weerbericht.'); });
     if (!res.ok) throw new Error('Weer kon niet worden opgehaald.');
     const data = await res.json();
     const h = data.hourly;
@@ -114,7 +114,8 @@ const Weather = (() => {
 
   // Steden zoeken via de geocoding van Open-Meteo (dezelfde dienst als het weer).
   async function searchCity(name) {
-    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=nl&format=json`);
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=nl&format=json`)
+      .catch(() => { throw new Error('Geen internet. Probeer het later nog eens.'); });
     if (!res.ok) throw new Error('Zoeken lukte niet.');
     const data = await res.json();
     return (data.results || []).map(r => ({

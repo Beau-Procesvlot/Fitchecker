@@ -14,9 +14,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Fitchecker">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -26,6 +24,8 @@
   <h1 id="page-title">Mijn kast</h1>
   <button class="fav-pill" id="fav-pill" aria-label="Favoriete looks"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z" fill="currentColor"/></svg><span id="fav-pill-text">Favorieten</span></button>
 </header>
+
+<button id="update-banner" class="update-banner hidden">Er is een nieuwe versie van Fitchecker. <b>Tik om te verversen</b></button>
 
 <div id="storage-warning" class="warning hidden">
   Deze browser bewaart je kast niet. Wat je toevoegt is weg na het sluiten.
@@ -37,6 +37,13 @@
     <div class="subhead">
       <span id="kast-count" class="muted"></span>
       <div id="wash-bar" class="wash-bar hidden"></div>
+    </div>
+    <div id="backup-nudge" class="backup-nudge hidden">
+      <p><strong>Al een maand geen back-up.</strong> Je kast staat alleen op deze telefoon; bewaar hem even als bestand.</p>
+      <div class="row">
+        <button class="btn small primary" id="backup-nudge-save">Nu bewaren</button>
+        <button class="btn small ghost" id="backup-nudge-later">Later</button>
+      </div>
     </div>
     <div class="boards" id="kast-boards"></div>
     <div id="corkboard" class="corkboard">
@@ -106,6 +113,9 @@
     <button class="settings-row" id="style-redo"><span>Moodboard opnieuw doen</span><span class="muted">›</span></button>
     <p class="muted small" id="trend-info"></p>
 
+    <h2>Fitchecker Wrapped</h2>
+    <div id="wrapped-list"></div>
+
     <h2>Eigen situaties</h2>
     <div id="sit-list"></div>
 
@@ -125,7 +135,7 @@
     <div id="second-life-list"></div>
 
     <h2>Back-up</h2>
-    <p class="muted small">Op een iPhone wist Safari je kast als je de app 7 dagen niet opent, tenzij hij op je beginscherm staat. Een back-up is dus slim.</p>
+    <p class="muted small">Op een iPhone wist Safari je kast als je de app 7 dagen niet opent, tenzij hij op je beginscherm staat. Een back-up is dus slim. <span id="backup-info"></span></p>
     <button class="settings-row" id="backup-save"><span>Kast opslaan als bestand</span><span class="muted">›</span></button>
     <button class="settings-row" id="backup-restore"><span>Back-up terugzetten</span><span class="muted">›</span></button>
     <input type="file" id="backup-file" accept="application/json,.json" hidden>
@@ -133,6 +143,7 @@
     <h2>Overig</h2>
     <button class="settings-row" id="settings-demo"><span>Voorbeeldkast toevoegen</span><span class="muted">›</span></button>
     <button class="settings-row" id="settings-welcome"><span>Welkomstscherm opnieuw</span><span class="muted">›</span></button>
+    <button class="settings-row" data-open-privacy><span>Privacy: wat gebeurt er met je gegevens?</span><span class="muted">›</span></button>
   </section>
 </main>
 
@@ -407,6 +418,42 @@
 
 </dialog>
 
+<!-- Fitchecker Wrapped (begin van de maand) -->
+<dialog id="wrapped" class="wrapped">
+  <div id="wr-bars" class="wr-bars"></div>
+  <button class="close wr-close" id="wr-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  <div id="wr-slide" class="wr-slide"></div>
+</dialog>
+
+<!-- Privacy -->
+<dialog id="privacy-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body privacy">
+    <h2 class="serif">Privacy</h2>
+    <p><strong>Kort gezegd: Fitchecker verzamelt niets.</strong> Er is geen account, geen reclame en geen tracking. De maker van de app kan niet zien wat er in jouw kast zit.</p>
+
+    <h3>Wat er op je telefoon blijft</h3>
+    <p>Je kleding, foto's en uitgeknipte foto's, je stijlprofiel, duimpjes, favorieten, wat je droeg, je Wrapped en je instellingen. Dat staat alleen in de browser van je eigen telefoon. Verwijder je de app of de websitegegevens, dan is het weg. Daarom kun je een back-up maken; dat bestand bewaar je zelf, waar jij wilt.</p>
+    <p>Ook het uitknippen van je foto's gebeurt op je telefoon. Je foto's worden nergens naartoe gestuurd.</p>
+
+    <h3>Diensten die iets zien</h3>
+    <p>Om te werken gebruikt Fitchecker een paar gratis diensten. Die zien, zoals elke website, je IP-adres:</p>
+    <ul>
+      <li><b>GitHub Pages</b> levert de app zelf.</li>
+      <li><b>Open-Meteo</b> levert het weer en zoekt steden. Het krijgt je locatie, afgerond op ongeveer een kilometer, of de stad die je kiest.</li>
+      <li><b>jsDelivr</b> levert eenmalig het uitknipmodel (ongeveer 53 MB), alleen als je uitknippen aanzet.</li>
+    </ul>
+    <p>De lettertypes zitten in de app zelf; daarvoor wordt geen andere dienst gebruikt.</p>
+
+    <h3>Locatie</h3>
+    <p>Alleen als je dat toestaat (je telefoon vraagt het), en alleen voor het weer. Je kunt ook een stad kiezen bij Instellingen.</p>
+
+    <h3>Alles wissen</h3>
+    <p>Verwijder de app van je beginscherm, of wis de websitegegevens in de instellingen van Safari. Vragen? Stel ze aan de maker van Fitchecker.</p>
+    <p class="muted small">Bijgewerkt op 6 oktober 2026.</p>
+  </div>
+</dialog>
+
 <!-- Welkom (eerste keer) -->
 <dialog id="welcome" class="welcome">
   <div class="w-step">
@@ -415,22 +462,23 @@
     <p>Iedereen heeft kleding die achter in de kast belandt en vergeten wordt. Fitchecker haalt die stukken weer tevoorschijn: de app stelt looks samen uit je eigen kleding, past ze aan het weer en je plannen aan, en geeft voorrang aan wat je lang niet droeg.</p>
     <p class="w-callout"><strong>Belangrijk:</strong> fotografeer juist óók de stukken die je zelden draagt. Daar zitten de verrassende looks in, en daar wordt de app het slimst van.</p>
     <button class="btn primary" id="w-start">Let’s go</button>
+    <button class="link w-privacy" data-open-privacy>Wat gebeurt er met je gegevens?</button>
   </div>
   <div class="w-step hidden">
-    <span class="brand">1 van 4</span>
+    <span class="brand">1 van 5</span>
     <h2 class="w-title">Voor wie is je kast?</h2>
     <p>Dan laat de app alleen de categorieën zien die bij je passen. Je kunt dit later altijd aanpassen.</p>
     <div class="gender-options" id="w-gender"></div>
   </div>
   <div class="w-step hidden">
-    <span class="brand">2 van 4</span>
+    <span class="brand">2 van 5</span>
     <h2 class="w-title">Wat vind jij mooi?</h2>
     <p id="w-mood-hint">Tik aan wat je mooi vindt. Daaruit maakt de app je stijlprofiel.</p>
     <div id="w-mood" class="mood-grid"></div>
     <button class="btn primary" id="w-mood-done">Volgende</button>
   </div>
   <div class="w-step hidden">
-    <span class="brand">3 van 4</span>
+    <span class="brand">3 van 5</span>
     <h2 class="w-title">Heb je het snel koud?</h2>
     <p>Dan stelt de app eerder een extra laag voor.</p>
     <input type="range" id="w-koukleum" min="-2" max="2" step="1" value="0" class="slider">
@@ -439,13 +487,19 @@
     <button class="btn primary" id="w-koukleum-next">Volgende</button>
   </div>
   <div class="w-step hidden">
-    <span class="brand">4 van 4</span>
+    <span class="brand">4 van 5</span>
     <h2 class="w-title">Mag de app weten waar je bent?</h2>
     <p>Alleen voor het weerbericht. Je locatie wordt afgerond op ongeveer een kilometer en verder nergens bewaard dan op je eigen telefoon.</p>
     <button class="btn primary" id="w-location">Locatie toestaan</button>
     <button class="btn ghost" id="w-skip">Later</button>
   </div>
-  <div class="w-dots"><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="w-step hidden">
+    <span class="brand">5 van 5</span>
+    <h2 class="w-title" id="w-home-title">Zet Fitchecker op je beginscherm</h2>
+    <div id="w-homescreen"></div>
+    <button class="btn primary" id="w-done">Aan de slag</button>
+  </div>
+  <div class="w-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
 </dialog>
 
 <input type="file" accept="image/*" id="f-photos" multiple hidden>
@@ -469,5 +523,7 @@
 <script src="js/onboarding.js"></script>
 <script src="js/moodboard.js"></script>
 <script src="js/kastcheck.js"></script>
+<script src="js/wrapped.js"></script>
+<script src="js/pwa.js"></script>
 </body>
 </html>

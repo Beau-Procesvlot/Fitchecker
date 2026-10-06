@@ -149,6 +149,8 @@ const Cutout = (() => {
         done++;
       } catch (err) {
         console.warn('Uitknippen mislukt', err);
+        // Geen internet (model nog niet binnen)? Dan niet als mislukt onthouden: bij de volgende start opnieuw.
+        if (!navigator.onLine) continue;
         const fresh = itemFor(job);
         if (fresh) await saveItem({ ...fresh, [keyOf(job.side)]: 'mislukt' });
       }

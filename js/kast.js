@@ -74,6 +74,7 @@ function renderKast() {
     };
   }
 
+  renderBackupNudge();
   $('#kast-empty').classList.toggle('hidden', state.items.length > 0);
   $('#kast-count').textContent = state.items.length ? `${state.items.length} stuks` : '';
 

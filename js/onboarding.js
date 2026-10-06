@@ -61,9 +61,18 @@ $('#w-location').onclick = async () => {
   }
   $('#w-location').disabled = false;
   $('#w-location').textContent = 'Locatie toestaan';
-  finishWelcome();
+  showHomeScreenStep();
 };
-$('#w-skip').onclick = finishWelcome;
+$('#w-skip').onclick = showHomeScreenStep;
+
+// Laatste stap: op het beginscherm zetten (of: staat er al op) en waarom een back-up slim is.
+function showHomeScreenStep() {
+  $('#w-home-title').textContent = isStandalone() ? 'Je kast is veilig' : 'Zet Fitchecker op je beginscherm';
+  $('#w-homescreen').innerHTML = homeScreenHTML();
+  welcomeStep = 5;
+  renderWelcome();
+}
+$('#w-done').onclick = finishWelcome;
 $('#settings-welcome').onclick = openWelcome;
 // Het welkomstscherm kan niet per ongeluk weggetikt worden.
 $('#welcome').addEventListener('cancel', e => e.preventDefault());

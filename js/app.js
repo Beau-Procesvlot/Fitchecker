@@ -203,9 +203,10 @@ async function loadDemo() {
 
 // Bij het openen (na de eerste keer), één scherm tegelijk:
 // 1. Ingesteld voordat het moodboard bestond? Eén keer om je stijl vragen.
-// 2. Binnen 2 uur terug? Je laatste looks.
-// 3. Hooguit één keer per week de kastcheck.
-// 4. "Wat wordt de look vandaag?"
+// 2. Nieuwe maand? Fitchecker Wrapped van vorige maand.
+// 3. Binnen 2 uur terug? Je laatste looks.
+// 4. Hooguit één keer per week de kastcheck.
+// 5. "Wat wordt de look vandaag?"
 async function startupFlow() {
   if (!state.profile.styleWeights && !state.profile.moodAsked) {
     state.profile.moodAsked = true;
@@ -213,6 +214,7 @@ async function startupFlow() {
     await openMoodboardSheet();
     await new Promise(r => $('#mood-sheet').addEventListener('close', r, { once: true }));
   }
+  if (await maybeWrapped()) await new Promise(r => $('#wrapped').addEventListener('close', r, { once: true }));
   if (await restoreLastLooks()) { showTab('outfit'); return; }
   if (maybeKastcheck(() => maybeOpenPlanner())) return;
   maybeOpenPlanner();
