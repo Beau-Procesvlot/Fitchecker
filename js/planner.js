@@ -110,6 +110,7 @@ function parseSearch(text) {
       s.styles.push(...(k.styles || []));
       if (k.accents) s.accents = true;
       if (k.neutral) s.neutral = true;
+      if (k.trendy) s.trendy = true;
       if (k.warmer) s.warmer += k.warmer;
       if (k.formality !== undefined) s.formality = k.formality;
       s.recognized.push(k.label);

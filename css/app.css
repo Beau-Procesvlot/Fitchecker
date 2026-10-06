@@ -694,3 +694,56 @@ div.tip b { color: var(--ink); font-weight: 600; }
   padding: 7px 14px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: .8rem;
   box-shadow: 0 4px 12px rgba(0,0,0,.2);
 }
+
+/* ---------- Fase 4: stijl leren ---------- */
+/* Moodboard: Pinterest-wand met foto's, of stijl-tegels zolang er nog geen foto's zijn */
+.mood-grid { margin: 12px 0 16px; }
+.mood-wall { columns: 2; column-gap: 10px; }
+.mood-pin { position: relative; display: block; width: 100%; margin: 0 0 10px; padding: 0; border: 0; background: none; break-inside: avoid; cursor: pointer; }
+.mood-pin img { width: 100%; display: block; border-radius: 14px; }
+.mood-pin.on img { outline: 3px solid var(--ink); outline-offset: 2px; }
+.mood-heart { position: absolute; right: 8px; bottom: 8px; width: 34px; height: 34px; border-radius: 50%; background: rgba(251,249,244,.9); display: flex; align-items: center; justify-content: center; color: var(--ink); }
+.mood-pin.on .mood-heart { color: #c0392b; }
+.mood-styles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mood-style { display: grid; gap: 4px; text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); cursor: pointer; }
+.mood-style strong { font-family: var(--serif); font-weight: 400; font-size: 1.15rem; line-height: 1.1; }
+.mood-style.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.mood-style.on .muted { color: var(--soft); }
+.mood-dots { display: flex; gap: 4px; }
+.mood-dots span { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+#welcome .w-step:has(#w-mood) { overflow-y: auto; }
+
+/* Stijlprofiel in Instellingen */
+.style-profile { display: grid; gap: 8px; margin: 6px 0 10px; }
+.style-bar { display: grid; grid-template-columns: 130px 1fr 38px; gap: 10px; align-items: center; font-size: .86rem; }
+.style-bar .bar { height: 8px; border-radius: 4px; background: var(--soft); overflow: hidden; }
+.style-bar .bar span { display: block; height: 100%; background: var(--ink); border-radius: 4px; }
+
+/* Trend-label en duimpjes op de look-kaart */
+.trend-badge {
+  display: flex; align-items: center; justify-content: center; gap: 6px; width: fit-content; margin: -4px auto 12px;
+  padding: 4px 12px; border-radius: 999px; background: #efe2c8; color: #6b4a14; font-size: .74rem; font-weight: 600; letter-spacing: .02em;
+}
+.rate { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(60,45,25,.08); }
+.rate-q { font-family: var(--hand); font-size: 1.15rem; font-weight: 600; color: #3a332a; margin-right: 4px; }
+.rate-btn { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: #fbf8f2; color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .15s; }
+.rate-btn.down svg { transform: rotate(180deg); }
+.rate-btn.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.rate-btn:active { transform: scale(.9); }
+.why-not { margin-top: 8px; text-align: center; }
+.why-not summary { cursor: pointer; font-size: .82rem; font-weight: 600; list-style: none; }
+.why-not summary::-webkit-details-marker { display: none; }
+.why-not summary span { color: var(--muted); font-weight: 400; }
+.why-not .chips { justify-content: center; margin-top: 8px; }
+
+/* Kastcheck */
+.kc-list { display: grid; gap: 10px; margin-top: 12px; }
+.kc-row { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.kc-pic { width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: var(--soft); display: flex; align-items: center; justify-content: center; }
+.kc-pic img { width: 100%; height: 100%; object-fit: cover; }
+.kc-pic .swatch { width: 60%; }
+.kc-text { display: grid; gap: 2px; }
+.kc-btns { grid-column: 1 / -1; display: flex; gap: 8px; }
+.kc-btns .chip { flex: 1; }
+
+dialog.welcome { overflow-y: auto; }

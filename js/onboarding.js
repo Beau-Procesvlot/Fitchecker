@@ -1,5 +1,4 @@
-// Welkomstscherm bij de eerste keer: voor wie de kast is, koukleum-schuifje en locatie toestaan.
-// In fase 4 komt het moodboard hier als extra stap bij.
+// Welkomstscherm bij de eerste keer: voor wie de kast is, moodboard (je stijl), koukleum en locatie.
 
 let welcomeStep = 0;
 
@@ -23,16 +22,24 @@ function renderWelcome() {
     state.profile.gender = b.dataset.g;
     await saveProfile();
     welcomeStep = 2;
+    moodPicks = new Set();
+    moodImages = null; // afbeeldingen voor man/vrouw opnieuw kiezen
     renderWelcome();
+    renderMoodboard($('#w-mood'), $('#w-mood-hint'), $('#w-mood-done'));
   });
 }
 
 $('#w-koukleum').oninput = renderWelcome;
 $('#w-start').onclick = () => { welcomeStep = 1; renderWelcome(); };
+$('#w-mood-done').onclick = async () => {
+  await saveMoodboard();
+  welcomeStep = 3;
+  renderWelcome();
+};
 $('#w-koukleum-next').onclick = async () => {
   state.profile.koukleum = +$('#w-koukleum').value;
   await saveProfile();
-  welcomeStep = 3;
+  welcomeStep = 4;
   renderWelcome();
 };
 

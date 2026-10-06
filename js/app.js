@@ -199,6 +199,23 @@ async function loadDemo() {
   showTab('kast');
 }
 
+// Bij het openen (na de eerste keer), één scherm tegelijk:
+// 1. Ingesteld voordat het moodboard bestond? Eén keer om je stijl vragen.
+// 2. Binnen 2 uur terug? Je laatste looks.
+// 3. Hooguit één keer per week de kastcheck.
+// 4. "Wat wordt de look vandaag?"
+async function startupFlow() {
+  if (!state.profile.styleWeights && !state.profile.moodAsked) {
+    state.profile.moodAsked = true;
+    await saveProfile();
+    await openMoodboardSheet();
+    await new Promise(r => $('#mood-sheet').addEventListener('close', r, { once: true }));
+  }
+  if (await restoreLastLooks()) { showTab('outfit'); return; }
+  if (maybeKastcheck(() => maybeOpenPlanner())) return;
+  maybeOpenPlanner();
+}
+
 // ---------- Start ----------
 // Pas starten als alle scripts geladen zijn (de opslag kan eerder klaar zijn dan de rest).
 document.addEventListener('DOMContentLoaded', async () => {
@@ -214,6 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Vraag de browser om de kast niet zomaar op te ruimen bij weinig ruimte.
   navigator.storage?.persist?.().catch(() => {});
   plan.transport = state.profile.transport;
+  await loadSuggested();
   await loadFavoriteKeys();
   updateFavButton();
   // Stukken die nog niet zijn uitgeknipt (bijvoorbeeld na het terugzetten van een back-up) alsnog doen.
@@ -221,6 +239,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   showTab('kast');
   // Eerste keer: welkomstscherm. Daarna opent de app met "Wat wordt de look vandaag?".
   if (!state.profile.onboarded) openWelcome();
-  else if (await restoreLastLooks()) showTab('outfit');
-  else maybeOpenPlanner();
+  else startupFlow();
 });

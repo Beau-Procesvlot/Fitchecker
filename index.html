@@ -102,6 +102,11 @@
       </div>
     </div>
 
+    <h2>Jouw stijl</h2>
+    <div id="style-profile" class="style-profile"></div>
+    <button class="settings-row" id="style-redo"><span>Moodboard opnieuw doen</span><span class="muted">›</span></button>
+    <p class="muted small" id="trend-info"></p>
+
     <h2>Eigen situaties</h2>
     <div id="sit-list"></div>
 
@@ -274,6 +279,32 @@
   </div>
 </dialog>
 
+<!-- Stijlprofiel opnieuw instellen -->
+<dialog id="mood-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Wat vind jij mooi?</h2>
+    <p class="muted small" id="mood-sheet-hint"></p>
+    <div id="mood-sheet-grid" class="mood-grid"></div>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn primary" id="mood-sheet-done">Opslaan</button>
+  </div>
+</dialog>
+
+<!-- Kastcheck (hooguit één keer per week) -->
+<dialog id="kastcheck" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Kastcheck</h2>
+    <p class="muted small">Heb je deze stukken de afgelopen maand gedragen? Wat je niet droeg, krijgt voorrang in je looks.</p>
+    <div id="kastcheck-list" class="kc-list"></div>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn primary" id="kastcheck-done">Overslaan</button>
+  </div>
+</dialog>
+
 <!-- Favorieten -->
 <dialog id="fav-sheet" class="sheet">
   <div class="sheet-handle"></div>
@@ -366,13 +397,20 @@
     <button class="btn primary" id="w-start">Let’s go</button>
   </div>
   <div class="w-step hidden">
-    <span class="brand">1 van 3</span>
+    <span class="brand">1 van 4</span>
     <h2 class="w-title">Voor wie is je kast?</h2>
     <p>Dan laat de app alleen de categorieën zien die bij je passen. Je kunt dit later altijd aanpassen.</p>
     <div class="gender-options" id="w-gender"></div>
   </div>
   <div class="w-step hidden">
-    <span class="brand">2 van 3</span>
+    <span class="brand">2 van 4</span>
+    <h2 class="w-title">Wat vind jij mooi?</h2>
+    <p id="w-mood-hint">Tik aan wat je mooi vindt. Daaruit maakt de app je stijlprofiel.</p>
+    <div id="w-mood" class="mood-grid"></div>
+    <button class="btn primary" id="w-mood-done">Volgende</button>
+  </div>
+  <div class="w-step hidden">
+    <span class="brand">3 van 4</span>
     <h2 class="w-title">Heb je het snel koud?</h2>
     <p>Dan stelt de app eerder een extra laag voor.</p>
     <input type="range" id="w-koukleum" min="-2" max="2" step="1" value="0" class="slider">
@@ -381,13 +419,13 @@
     <button class="btn primary" id="w-koukleum-next">Volgende</button>
   </div>
   <div class="w-step hidden">
-    <span class="brand">3 van 3</span>
+    <span class="brand">4 van 4</span>
     <h2 class="w-title">Mag de app weten waar je bent?</h2>
     <p>Alleen voor het weerbericht. Je locatie wordt afgerond op ongeveer een kilometer en verder nergens bewaard dan op je eigen telefoon.</p>
     <button class="btn primary" id="w-location">Locatie toestaan</button>
     <button class="btn ghost" id="w-skip">Later</button>
   </div>
-  <div class="w-dots"><span></span><span></span><span></span><span></span></div>
+  <div class="w-dots"><span></span><span></span><span></span><span></span><span></span></div>
 </dialog>
 
 <input type="file" accept="image/*" id="f-photos" multiple hidden>
@@ -403,9 +441,13 @@
 <script src="js/categories.js"></script>
 <script src="js/figure.js"></script>
 <script src="js/weather.js"></script>
+<script src="js/trends.js"></script>
+<script src="js/style.js"></script>
 <script src="js/cutout.js"></script>
 <script src="js/outfit.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/onboarding.js"></script>
+<script src="js/moodboard.js"></script>
+<script src="js/kastcheck.js"></script>
 </body>
 </html>

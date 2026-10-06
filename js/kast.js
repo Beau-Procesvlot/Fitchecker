@@ -70,9 +70,13 @@ function renderKast() {
 
   // Borden, zoals op Pinterest: per categorie een collage van je stukken. Tik = filteren.
   const used = sortedCategories().filter(c => state.items.some(i => i.categoryId === c.id));
-  if (kastCategory !== 'all' && !used.some(c => c.id === kastCategory)) kastCategory = 'all';
-  $('#kast-boards').classList.toggle('hidden', used.length < 2);
-  const boards = [{ id: 'all', name: 'Alles', items: state.items }, ...used.map(c => ({ id: c.id, name: c.name, items: state.items.filter(i => i.categoryId === c.id) }))];
+  // Vergeten: stukken die al 3 weken of langer niet gedragen zijn (en niet net toegevoegd).
+  const isForgotten = i => daysUnworn(i) >= 21 && (Date.now() - (i.createdAt || 0)) > 14 * 86400000;
+  const forgotten = state.items.filter(isForgotten);
+  if (kastCategory === 'vergeten' && !forgotten.length) kastCategory = 'all';
+  if (!['all', 'vergeten'].includes(kastCategory) && !used.some(c => c.id === kastCategory)) kastCategory = 'all';
+  $('#kast-boards').classList.toggle('hidden', used.length < 2 && !forgotten.length);
+  const boards = [{ id: 'all', name: 'Alles', items: state.items }, ...(forgotten.length ? [{ id: 'vergeten', name: 'Vergeten', items: forgotten }] : []), ...used.map(c => ({ id: c.id, name: c.name, items: state.items.filter(i => i.categoryId === c.id) }))];
   $('#kast-boards').innerHTML = boards.map(b => `
     <button class="board ${kastCategory === b.id ? 'on' : ''}" data-board="${b.id}">
       <div class="board-cover">${[0, 1, 2, 3].map(n => b.items[n] ? `<div>${miniHTML(b.items[n])}</div>` : '<div></div>').join('')}</div>
@@ -83,7 +87,7 @@ function renderKast() {
 
   const order = Object.fromEntries(sortedCategories().map((c, i) => [c.id, i]));
   const list = (kastFilter === 'wash' ? inWash : state.items)
-    .filter(i => kastCategory === 'all' || i.categoryId === kastCategory)
+    .filter(i => kastCategory === 'all' || (kastCategory === 'vergeten' ? isForgotten(i) : i.categoryId === kastCategory))
     .sort((a, b) => order[a.categoryId] - order[b.categoryId] || (b.createdAt || 0) - (a.createdAt || 0));
 
   $('#corkboard').classList.toggle('hidden', !list.length);
@@ -134,7 +138,7 @@ function openDetail(id) {
 
   $('#d-flip').onclick = () => $('#d-flip').classList.toggle('flipped');
   $('#d-wear').onclick = async () => {
-    await saveItem({ ...it, worn: [...(it.worn || []), today()] });
+    await saveItem({ ...it, worn: [...(it.worn || []), today()], boost: false });
     toast('Genoteerd');
     openDetail(id); renderKast();
   };

@@ -156,13 +156,23 @@ function scoreLook(o, used, ctx) {
   const col = colorScore(parts);
   const sil = silhouetteScore(o, ctx.search);
   let score = col.score + toneScore(parts) + sil.score;
-  score += formalityScore(parts.filter(i => slotOf(i) !== 'acc'), ctx.search.formality ?? ctx.formality);
+  // Netheid: wat de situatie vraagt, bijgestuurd door je duimpjes ("te netjes" / "te casual").
+  score += formalityScore(parts.filter(i => slotOf(i) !== 'acc'), (ctx.search.formality ?? ctx.formality) + feedback().formality);
   score += parts.filter(i => i.styles.some(s => ctx.styles.includes(s))).length * 0.4;
   const target = TARGET_WARMTH[ctx.level] + ctx.search.warmer;
   score -= Math.abs(parts.reduce((s, i) => s + i.warmth, 0) - target) * 0.4;
   score += searchScore(parts, ctx.search, col);
-  // Stukken die je lang niet droeg krijgen voorrang (kern van de app).
+  // Jouw stijl (moodboard) en wat je eerder van deze combinaties vond (duimpjes).
+  score += profileScore(o) + feedbackScore(o);
+  // Trends van dit seizoen: standaard een lichte voorkeur (bij verder gelijke looks wint de trendy).
+  // Vraag je om iets "trendy", dan tellen ze flink zwaarder.
+  const trends = lookTrends(o);
+  score += Math.min(2, trends.length) * (ctx.search.trendy ? 1.8 : 0.35);
+  // Stukken die je lang niet droeg of die de app lang niet voorstelde krijgen voorrang (kern van de app).
   score += parts.reduce((s, i) => s + daysSinceWorn(i), 0) / parts.length / 30;
+  score += parts.reduce((s, i) => s + daysSinceSuggested(i), 0) / parts.length / 60 * 0.6;
+  // Bij de kastcheck gezegd dat je iets niet droeg? Dan extra voorrang tot je het draagt.
+  score += parts.filter(i => i.boost).length * 1.2;
   // Afwisseling tussen de looks: stukken die al in een eerdere look zitten tellen minder.
   score -= parts.filter(i => used.has(i.id)).length * 0.9;
   return { score, why: [forgottenWhy(parts), sil.why, col.why].filter(Boolean) };
@@ -236,6 +246,7 @@ function generateLooks(ctx) {
     looks.push(look);
   }
   activeLook = 0;
+  markSuggested(looks);
   renderLooks();
   $('#looks').scrollTo({ left: 0 });
 }
@@ -322,11 +333,16 @@ function explainLook(look, ctx) {
   // Stemming en zoekwoorden
   const wished = [...new Set(ctx?.search?.recognized || [])];
   if (wished.length) reasons.push(['Jouw wens', `Je stemming: ${wished.join(', ')}. Daar heeft de app op gelet bij het kiezen.`]);
+  // Trend van dit seizoen en jouw stijl gaan vooraan: dat wil je het eerst weten.
+  const trend = lookTrends(look.parts)[0];
+  if (trend) reasons.unshift(['Trend', trend.text]);
+  const style = topStyleFor(look.parts);
+  if (style) reasons.splice(trend ? 1 : 0, 0, ['Jouw stijl', `Past bij jouw stijl: ${style.label.toLowerCase()}.`]);
   // Vergeten
   const forgotten = forgottenWhy(parts);
   if (forgotten) reasons.push(['Uit de kast', forgotten]);
 
-  return { quote: look.why.split('. ')[0].replace(/\.$/, ''), palette: lookPalette(look.parts), reasons: reasons.slice(0, 4) };
+  return { quote: look.why.split('. ')[0].replace(/\.$/, ''), palette: lookPalette(look.parts), reasons: reasons.slice(0, 5) };
 }
 
 // De rij looks is zo hoog als de look die je bekijkt (anders ontstaat er een gat onder korte looks).
@@ -559,6 +575,8 @@ async function openFavorites() {
 
 document.querySelectorAll('.fav-open').forEach(b => b.onclick = openFavorites);
 
+const THUMB = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 10v10H4V10zM7 10l4-7c1.6 0 2.6 1.2 2.1 3L12.4 10H18a2 2 0 0 1 2 2.3l-1.1 6A2 2 0 0 1 16.9 20H7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+
 const heartSVG = filled => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 function renderLooks(message) {
@@ -585,6 +603,7 @@ function renderLooks(message) {
       <button class="fav-btn ${fav ? 'on' : ''}" data-look="${i}" aria-label="${fav ? 'Uit favorieten' : 'Bewaar als favoriet'}">${heartSVG(fav)}</button>
       <h2 class="look-title" style="color:${titleColor(look.parts)}">Look ${i + 1}</h2>
       <p class="look-why">${look.why}</p>
+      ${(() => { const t = lookTrends(look.parts)[0]; return t ? `<p class="trend-badge">${svgIcon('M12 3l2.5 6 6.5.5-5 4 1.5 6.5L12 17l-5.5 3 1.5-6.5-5-4 6.5-.5z', 14)}Trend dit seizoen · ${esc(t.label)}</p>` : ''; })()}
       ${coatHTML(lookCtx)}
       <div class="look-body">
         <ol class="look-items">${slots.map((s, n) => lookItemHTML(s, look.parts[s], n + 1, i)).join('')}</ol>
@@ -599,10 +618,33 @@ function renderLooks(message) {
           <span class="doodle">${svgIcon(DOODLES[i % DOODLES.length], 34)}</span>
         </div>
       </div>
+      <div class="rate">
+        <span class="rate-q">${look.rated === 'up' ? 'Meer van dit, genoteerd' : look.rated === 'down' ? 'Genoteerd' : 'Wat vind je ervan?'}</span>
+        <button class="rate-btn ${look.rated === 'up' ? 'on' : ''}" data-look="${i}" data-rate="up" aria-label="Goed">${THUMB}</button>
+        <button class="rate-btn down ${look.rated === 'down' ? 'on' : ''}" data-look="${i}" data-rate="down" aria-label="Niet goed">${THUMB}</button>
+      </div>
+      ${look.rated === 'down' ? `<details class="why-not">
+        <summary>Waarom? <span>(optioneel)</span></summary>
+        <div class="chips">${DISLIKE_REASONS.map(r => `<button class="chip ${look.reason === r.id ? 'on' : ''}" data-look="${i}" data-reason="${r.id}">${r.label}</button>`).join('')}</div>
+      </details>` : ''}
     </article>`;
   }).join('');
   $('#looks').querySelectorAll('.swap').forEach(b => b.onclick = () => openSwap(+b.dataset.look, b.dataset.slot));
   $('#looks').querySelectorAll('.fav-btn').forEach(b => b.onclick = () => toggleFavorite(looks[+b.dataset.look]));
+  // Duimpjes: de app leert je smaak. Bij een duim omlaag kun je (optioneel) zeggen waarom.
+  $('#looks').querySelectorAll('.rate-btn').forEach(b => b.onclick = async () => {
+    const look = looks[+b.dataset.look];
+    if (look.rated) return;
+    await rateLook(look, b.dataset.rate === 'up');
+    rerenderKeepScroll();
+  });
+  $('#looks').querySelectorAll('[data-reason]').forEach(b => b.onclick = async () => {
+    const look = looks[+b.dataset.look];
+    if (look.reason) return;
+    await explainDislike(look, b.dataset.reason);
+    toast('Dank je, de app past zich aan');
+    rerenderKeepScroll();
+  });
   // Wisselen tussen flat-lay en poppetje; de keuze wordt onthouden.
   $('#looks').querySelectorAll('.view-toggle button').forEach(b => b.onclick = () => {
     state.profile.lookView = b.dataset.view;
@@ -700,7 +742,7 @@ $('#wear-look').onclick = async () => {
   if (!look) return;
   for (const [slot, it] of Object.entries(look.parts)) {
     if (it.worn?.[it.worn.length - 1] === today()) continue;
-    const updated = { ...it, worn: [...(it.worn || []), today()] };
+    const updated = { ...it, worn: [...(it.worn || []), today()], boost: false };
     await saveItem(updated);
     look.parts[slot] = updated;
   }

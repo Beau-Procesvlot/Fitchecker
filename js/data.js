@@ -186,6 +186,10 @@ const KEYWORDS = {
   baggy:     { alias: 'oversized' },
   strak:     { fits: ['slim'], label: 'strak' },
   feest:     { styles: ['feest'], label: 'feestelijk' },
+  trendy:    { trendy: true, label: 'trendy' },
+  trend:     { alias: 'trendy' },
+  trends:    { alias: 'trendy' },
+  hip:       { alias: 'trendy' },
   feestelijk: { alias: 'feest' },
 };
 

@@ -7,6 +7,11 @@ async function renderSettings() {
     renderSettings();
     toast(id === 'man' ? 'Jurken, rokken, jumpsuits en blouses verborgen' : 'Alle categorieën zichtbaar');
   });
+  $('#style-profile').innerHTML = styleProfileHTML();
+  $('#style-redo').querySelector('span').textContent = state.profile.styleWeights ? 'Moodboard opnieuw doen' : 'Stel je stijl in met het moodboard';
+  $('#trend-info').textContent = trendsActive()
+    ? `Trends: ${TRENDS.season} (${TRENDS.rules.length} trends).`
+    : `Het trendbestand (${TRENDS.season}) is verlopen. Tijd om de trends van dit seizoen op te zoeken.`;
   $('#set-koukleum').value = state.profile.koukleum;
   $('#set-koukleum-label').textContent = koukleumLabel(state.profile.koukleum);
   renderLocationStatus();
@@ -96,6 +101,7 @@ $('#c-delete').onclick = async () => {
 };
 
 $('#add-cat').onclick = () => openCategoryEditor(null);
+$('#style-redo').onclick = () => openMoodboardSheet();
 $('#cutout-all').onclick = () => { Cutout.enqueueAll(); setTimeout(renderSettings, 300); };
 $('#settings-demo').onclick = loadDemo;
 
