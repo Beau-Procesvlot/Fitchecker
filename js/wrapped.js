@@ -227,6 +227,10 @@ async function shareWrapped() {
   }
 }
 
+// TIJDELIJK (testknop Wrapped): de Wrapped van de lopende maand tot nu toe.
+// Weghalen samen met de knop #wrapped-test in index.html.
+$('#wrapped-test').onclick = () => openWrapped(monthKey(new Date()));
+
 // ---------- Instellingen: eerdere Wrapped's terugkijken ----------
 function renderWrappedSettings() {
   const keys = [];
