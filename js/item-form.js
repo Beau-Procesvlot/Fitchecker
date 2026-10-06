@@ -49,7 +49,7 @@ async function openBatchItem(previous) {
   const result = await batch.processed[batch.index];
   draft.processing = false;
   if (result.error) toast(result.error);
-  else Object.assign(draft, { photo: result.photo, ratio: result.ratio, color: result.color, colors: result.colors, colorsFront: result.colors, cutout: result.cutout });
+  else Object.assign(draft, { photo: result.photo, ratio: result.ratio, color: result.color, colors: result.colors, colorsFront: result.colors, cutout: result.cutout, lowContrast: result.lowContrast });
   renderItemForm();
 }
 
@@ -84,6 +84,8 @@ function renderItemForm() {
       ? `<img src="${draft.photo}" alt=""><span class="photo-change">Andere foto</span>`
       : `<div class="photo-empty"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Foto toevoegen <span class="muted">· mag ook later</span></div>`;
   $('#f-tip').classList.toggle('hidden', !!(draft.photo || draft.processing));
+  // Waarschuwing als het stuk op de achtergrond lijkt (en de iPhone het niet al heeft uitgeknipt).
+  $('#f-contrast').classList.toggle('hidden', !(draft.photo && draft.lowContrast && !draft.cutout && !draft.processing));
   // Zonder foto is het vlak klein, zodat de categorieën meteen in beeld zijn.
   $('#f-photo-area').classList.toggle('compact', !draft.photo && !draft.processing);
 
@@ -216,7 +218,7 @@ $('#f-cancel').onclick = () => {
 $('#f-save').onclick = async () => {
   if (!draft.categoryId || draft.processing || draft.processingBack) return;
   const isNew = !draft.id;
-  const { processing, processingBack, ...rest } = draft;
+  const { processing, processingBack, lowContrast, ...rest } = draft;
   const item = {
     ...rest,
     id: draft.id || newId(),

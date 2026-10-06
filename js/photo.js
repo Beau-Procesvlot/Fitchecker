@@ -110,7 +110,12 @@ function detectColors(cv) {
     for (let y = first + 1; y < last; y++) bg[y * size + x] = 0;
   }
 
-  return countColors(px, size, bg);
+  // Lijkt het stuk op de achtergrond (wit shirt op wit dekbed)? Dan wordt uitknippen lastig:
+  // de app geeft dan meteen een tip om de foto anders te maken.
+  const result = countColors(px, size, bg);
+  const main = result.colors[0];
+  if (main && colorDistance(hexToRgb(colorById(main.id).hex), bgAvg) < 75) result.lowContrast = true;
+  return result;
 }
 
 // Telt de kleuren van alles wat geen achtergrond is (bg[i] = 1 is achtergrond).
@@ -165,7 +170,8 @@ function countColors(px, size, bg) {
   // Tinten van één kleurfamilie (kreukels, schaduw, een vervaagde spijkerbroek) zijn geen print.
   const oneFamily = COLOR_FAMILIES.some(f => kept.every(c => f.includes(c.id)));
   const print = !oneFamily && ((kept.length >= 3 && kept[0].pct < 60) || (busy > 0.12 && others >= 15));
-  return { colors, color: print ? 'print' : (colors[0]?.id || 'zwart') };
+  // useCenter: het stuk viel bijna helemaal weg tegen de achtergrond, ook een teken van te weinig contrast.
+  return { colors, color: print ? 'print' : (colors[0]?.id || 'zwart'), lowContrast: useCenter };
 }
 
 const COLOR_FAMILIES = [

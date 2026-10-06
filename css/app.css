@@ -615,6 +615,13 @@ dialog.plan-dialog .planner { padding-bottom: 24px; }
 
 .doodle { position: absolute; right: 6px; bottom: 6px; color: #b39c7d; }
 
+/* Fototips in het toevoegscherm */
+div.tip { margin: 10px 2px 0; padding: 10px 12px; border-radius: 12px; background: var(--soft); font-size: .8rem; color: var(--ink); }
+div.tip strong { display: block; margin-bottom: 4px; font-size: .82rem; }
+div.tip ul { margin: 0; padding-left: 16px; display: grid; gap: 3px; color: var(--muted); }
+div.tip b { color: var(--ink); font-weight: 600; }
+.tip.warn { margin: 10px 2px 0; padding: 10px 12px; border-radius: 12px; background: #f6e4c6; color: #6b4310; font-size: .82rem; }
+
 /* Voor wie is je kast? (welkomstscherm) */
 .gender-options { display: grid; gap: 10px; margin-top: 8px; }
 .gender-options .day-option { min-height: 64px; justify-content: center; }

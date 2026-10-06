@@ -164,7 +164,16 @@
       <p class="back-hint" id="f-back-hint">Print of logo op de rug? Voeg de achterkant toe. Zonder foto gaat de app uit van een effen achterkant.</p>
     </div>
     <input type="file" accept="image/*" id="f-back" hidden>
-    <p class="tip" id="f-tip">Tip: leg het plat op een lege vloer of hang het tegen een witte muur. Dan herkent de app de kleur het best.</p>
+    <div class="tip" id="f-tip">
+      <strong>Zo wordt je foto het mooist</strong>
+      <ul>
+        <li><b>Licht op donker, donker op licht:</b> een wit shirt op een donkere vloer of deken, een zwarte broek op een lichte.</li>
+        <li><b>Plat en glad</b>, op een egale ondergrond zonder patroon.</li>
+        <li><b>Het hele stuk in beeld</b>, met niets anders op de foto.</li>
+        <li><b>Goed licht</b>, liefst daglicht, zonder harde schaduw.</li>
+      </ul>
+    </div>
+    <p class="tip warn hidden" id="f-contrast">Je stuk lijkt erg op de achtergrond, en dan wordt het uitknippen lastig. Leg het op iets dat er niet op lijkt (licht op donker, donker op licht) en tik op de foto om een nieuwe te maken.</p>
     <input type="file" accept="image/*" id="f-photo" hidden>
 
     <p class="label">Categorie <span class="req">verplicht</span></p>
@@ -236,7 +245,7 @@
     <div class="choice-list">
       <button class="choice" id="choice-photos">
         <strong>Foto's kiezen</strong>
-        <span>Eén of meerdere tegelijk. De app herkent de kleur zelf.</span>
+        <span>Eén of meerdere tegelijk. De app herkent de kleur zelf. Tip: licht op donker, donker op licht.</span>
       </button>
       <button class="choice" id="choice-quick">
         <strong>Snel, zonder foto</strong>
