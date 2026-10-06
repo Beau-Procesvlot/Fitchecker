@@ -472,14 +472,16 @@ function lookPicHTML(it) {
 }
 
 // Flat-lay: de stukken neergelegd zoals een stylist dat doet. Vakken in procenten van het vlak.
+// Groot en een beetje over elkaar heen. Een trui of hoodie ligt altijd bovenop het shirt;
+// het shirt piept er linksboven onder vandaan.
 const FLATLAY = {
-  full:   { left: 10, top: 0,  width: 80, height: 60 },
-  base:   { left: 2,  top: 0,  width: 62, height: 36 },
-  mid:    { left: 34, top: 6,  width: 64, height: 38 },
-  single: { left: 14, top: 0,  width: 72, height: 38 },
-  bottom: { left: 20, top: 36, width: 60, height: 44 },
-  shoes:  { left: 8,  top: 80, width: 54, height: 18 },
-  acc:    { left: 64, top: 64, width: 34, height: 20 },
+  full:   { left: 0,  top: 0,  width: 100, height: 64 },
+  base:   { left: -2, top: 0,  width: 74,  height: 40 },
+  mid:    { left: 12, top: 5,  width: 90,  height: 45 },
+  single: { left: 0,  top: 0,  width: 100, height: 46 },
+  bottom: { left: 6,  top: 35, width: 88,  height: 50 },
+  shoes:  { left: -2, top: 79, width: 66,  height: 21 },
+  acc:    { left: 60, top: 68, width: 42,  height: 24 },
 };
 function flatlayHTML(parts) {
   const layers = [];
@@ -494,11 +496,12 @@ function flatlayHTML(parts) {
     layers.push(`<div class="fl-item ${src ? 'cut' : 'nocut'}" style="left:${box.left}%;top:${box.top}%;width:${box.width}%;height:${box.height}%;--r:${rot}deg;z-index:${z}">${content}</div>`);
   };
   if (parts.full) add('full', FLATLAY.full, 2);
-  if (parts.base && parts.mid) { add('base', FLATLAY.base, 2); add('mid', FLATLAY.mid, 3); }
-  else { add('base', FLATLAY.single, 2); add('mid', FLATLAY.single, 3); }
+  // Trui of hoodie (laag eroverheen) altijd boven het shirt.
+  if (parts.base && parts.mid) { add('base', FLATLAY.base, 2); add('mid', FLATLAY.mid, 4); }
+  else { add('base', FLATLAY.single, 2); add('mid', FLATLAY.single, 4); }
   add('bottom', FLATLAY.bottom, 1);
-  add('shoes', FLATLAY.shoes, 4);
-  add('acc', FLATLAY.acc, 5);
+  add('shoes', FLATLAY.shoes, 5);
+  add('acc', FLATLAY.acc, 6);
   return `<div class="flatlay">${layers.join('')}</div>`;
 }
 
