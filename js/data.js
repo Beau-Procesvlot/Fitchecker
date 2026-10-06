@@ -57,6 +57,14 @@ const HIDDEN_FOR = {
   alles: [],
 };
 
+// Kleding een tweede leven geven (bij verwijderen en in Instellingen). Links gecontroleerd op 6 oktober 2026.
+const SECOND_LIFE = [
+  { label: 'Verkopen', hint: 'Op Vinted, dan verdient het nog wat op', url: 'https://www.vinted.nl/' },
+  { label: 'Kringloopwinkel', hint: 'Bij jou in de buurt (opent kaart)', url: 'https://www.google.com/maps/search/kringloopwinkel' },
+  { label: 'Kledingcontainer', hint: 'Sympany: zoek een container op postcode', url: 'https://www.sympany.nl/kledinginzameling/' },
+  { label: 'Leger des Heils ReShare', hint: 'Tweedehands kleding voor wie het nodig heeft', url: 'https://www.reshare.nl/tweedehands-kleding-inzameling' },
+];
+
 // neutral: past bij alles. hue: kleurtoon in graden, voor kleurharmonie.
 // tone: warme aardetinten en koele felle kleuren gaan minder goed samen.
 const COLORS = [

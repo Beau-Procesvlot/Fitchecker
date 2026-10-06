@@ -8,6 +8,7 @@ async function renderSettings() {
     toast(id === 'man' ? 'Jurken, rokken, jumpsuits en blouses verborgen' : 'Alle categorieën zichtbaar');
   });
   $('#style-profile').innerHTML = styleProfileHTML();
+  $('#second-life-list').innerHTML = secondLifeHTML();
   $('#style-redo').querySelector('span').textContent = state.profile.styleWeights ? 'Moodboard opnieuw doen' : 'Stel je stijl in met het moodboard';
   $('#trend-info').textContent = trendsActive()
     ? `Trends: ${TRENDS.season} (${TRENDS.rules.length} trends).`

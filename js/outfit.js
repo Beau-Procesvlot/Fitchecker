@@ -535,7 +535,7 @@ async function toggleFavorite(look) {
 
 async function updateFavButton() {
   const n = (await getFavorites()).length;
-  document.querySelectorAll('.fav-open').forEach(b => { b.textContent = n ? `Favorieten (${n})` : 'Favorieten'; b.classList.toggle('hidden', !n); });
+  $('#fav-pill-text').textContent = n ? `Favorieten ${n}` : 'Favorieten';
 }
 
 async function openFavorites() {
@@ -573,7 +573,7 @@ async function openFavorites() {
   if (!$('#fav-sheet').open) $('#fav-sheet').showModal();
 }
 
-document.querySelectorAll('.fav-open').forEach(b => b.onclick = openFavorites);
+$('#fav-pill').onclick = openFavorites;
 
 const THUMB = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 10v10H4V10zM7 10l4-7c1.6 0 2.6 1.2 2.1 3L12.4 10H18a2 2 0 0 1 2 2.3l-1.1 6A2 2 0 0 1 16.9 20H7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
 
@@ -612,9 +612,12 @@ function renderLooks(message) {
             <button data-view="flatlay" class="${view === 'flatlay' ? 'on' : ''}">Flat-lay</button>
             <button data-view="pop" class="${view === 'pop' ? 'on' : ''}">Pop</button>
           </div>
-          <span class="note note-top">${esc(feel)}${arrowSVG('down-left')}</span>
-          ${view === 'flatlay' ? flatlayHTML(look.parts) : figureSVG(look.parts)}
-          <span class="note note-side">${esc(styleNote)}${arrowSVG('down-right')}</span>
+          ${view === 'flatlay'
+            // Bij flat-lay geen notities over de foto's heen, maar één bijschrift eronder, zoals in een tijdschrift.
+            ? `${flatlayHTML(look.parts)}<p class="fl-caption">${esc(feel)} · ${esc(styleNote)}</p>`
+            : `<span class="note note-top">${esc(feel)}${arrowSVG('down-left')}</span>
+               ${figureSVG(look.parts)}
+               <span class="note note-side">${esc(styleNote)}${arrowSVG('down-right')}</span>`}
           <span class="doodle">${svgIcon(DOODLES[i % DOODLES.length], 34)}</span>
         </div>
       </div>

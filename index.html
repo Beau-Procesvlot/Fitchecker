@@ -24,6 +24,7 @@
 <header class="topbar">
   <span class="brand">Fitchecker</span>
   <h1 id="page-title">Mijn kast</h1>
+  <button class="fav-pill" id="fav-pill" aria-label="Favoriete looks"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z" fill="currentColor"/></svg><span id="fav-pill-text">Favorieten</span></button>
 </header>
 
 <div id="storage-warning" class="warning hidden">
@@ -51,7 +52,7 @@
         <span style="--r:2deg;background:#1f2b47;color:#f3efe6">Vintage</span>
       </div>
       <h2 class="serif">Begin je kast</h2>
-      <p class="muted">Maak een foto van je eerste kledingstuk. Hoe meer je toevoegt, hoe beter de looks.</p>
+      <p class="muted">Maak een foto van je eerste kledingstuk. Hoe meer je toevoegt, hoe beter de looks. Vergeet niet de stukken die je zelden draagt: daar zitten de verrassende looks in.</p>
       <button class="btn primary" id="empty-add">Eerste kledingstuk toevoegen</button>
       <button class="btn ghost" id="empty-demo">Eerst even rondkijken met een voorbeeldkast</button>
     </div>
@@ -63,7 +64,6 @@
       <p class="q">Klaar voor een nieuwe look?</p>
       <p class="muted">Vertel waar je heen gaat en hoe je je voelt. De app checkt het weer en stelt looks samen.</p>
       <button class="btn primary" id="open-planner">Wat wordt de look vandaag?</button>
-      <button class="btn ghost fav-open hidden">Favorieten</button>
     </div>
     <div id="plan-summary" class="plan-summary hidden">
       <span id="plan-summary-text"></span>
@@ -75,7 +75,6 @@
     <div id="look-actions" class="look-actions hidden">
       <button class="btn primary" id="wear-look">Draag ik vandaag</button>
       <button class="btn" id="more-looks">Nieuwe looks</button>
-      <button class="btn ghost fav-open hidden">Favorieten</button>
     </div>
     <section id="why-more" class="why-more hidden"></section>
   </section>
@@ -120,6 +119,10 @@
     <p class="muted small" id="cutout-info">Voor je looks haalt de app de achtergrond van je kledingfoto's weg.</p>
     <button class="settings-row" id="cutout-all"><span>Hele kast uitknippen</span><span class="muted">›</span></button>
     <p class="muted small credit">Uitknippen gebeurt op je telefoon met <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">@imgly/background-removal</a> (AGPL-3.0). De broncode van Fitchecker is openbaar op GitHub.</p>
+
+    <h2>Kleding een tweede leven geven</h2>
+    <p class="muted small">Iets dat je echt niet meer draagt? Zonde om weg te gooien.</p>
+    <div id="second-life-list"></div>
 
     <h2>Back-up</h2>
     <p class="muted small">Op een iPhone wist Safari je kast als je de app 7 dagen niet opent, tenzij hij op je beginscherm staat. Een back-up is dus slim.</p>
@@ -305,6 +308,22 @@
   </div>
 </dialog>
 
+<!-- Verwijderen: tweede leven -->
+<dialog id="gone-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif" id="gone-title">Weg uit je kast?</h2>
+    <p class="muted small">Draag je het echt niet meer? Geef het een tweede leven.</p>
+    <div id="gone-list" class="gone-list"></div>
+  </div>
+  <div class="sheet-footer">
+    <div class="row">
+      <button type="button" class="btn" id="gone-cancel">Annuleren</button>
+      <button type="button" class="btn danger" id="gone-confirm">Verwijderen</button>
+    </div>
+  </div>
+</dialog>
+
 <!-- Favorieten -->
 <dialog id="fav-sheet" class="sheet">
   <div class="sheet-handle"></div>
@@ -393,7 +412,8 @@
   <div class="w-step">
     <span class="brand">Fitchecker</span>
     <h2 class="w-title">Je hele kast,<br>elke dag een look.</h2>
-    <p>Fitchecker stelt outfits samen uit je eigen kleding, past ze aan het weer en je plannen aan, en zorgt dat je vergeten stukken weer gaat dragen.</p>
+    <p>Iedereen heeft kleding die achter in de kast belandt en vergeten wordt. Fitchecker haalt die stukken weer tevoorschijn: de app stelt looks samen uit je eigen kleding, past ze aan het weer en je plannen aan, en geeft voorrang aan wat je lang niet droeg.</p>
+    <p class="w-callout"><strong>Belangrijk:</strong> fotografeer juist óók de stukken die je zelden draagt. Daar zitten de verrassende looks in, en daar wordt de app het slimst van.</p>
     <button class="btn primary" id="w-start">Let’s go</button>
   </div>
   <div class="w-step hidden">

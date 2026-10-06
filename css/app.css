@@ -747,3 +747,54 @@ div.tip b { color: var(--ink); font-weight: 600; }
 .kc-btns .chip { flex: 1; }
 
 dialog.welcome { overflow-y: auto; }
+
+/* ---------- Poetsronde ---------- */
+/* Favorieten-pil rechtsboven */
+.topbar { position: sticky; }
+.fav-pill {
+  position: absolute; right: 16px; bottom: 14px;
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px 7px 11px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--card);
+  color: var(--ink); font-size: .8rem; font-weight: 600; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(40, 25, 10, .08); transition: transform .12s;
+}
+.fav-pill svg { color: #c0392b; }
+.fav-pill:active { transform: scale(.95); }
+
+/* Flat-lay: één bijschrift eronder in plaats van notities over de foto's */
+.fl-caption { margin: 6px 0 0; text-align: center; font-family: var(--hand); font-size: 1.15rem; font-weight: 600; color: #3a332a; }
+
+/* Welkomstscherm: het belangrijkste punt in een kader */
+.w-step p.w-callout { color: var(--ink); background: var(--soft); border-radius: 14px; padding: 12px 14px; font-size: .95rem; }
+
+/* Tweede leven */
+.gone-list { margin-top: 12px; }
+a.link-row { color: var(--ink); text-decoration: none; }
+
+/* Kast: penseelstreken langs de randen, zoals op de look-kaarten */
+#tab-kast { position: relative; }
+#tab-kast::before, #tab-kast::after {
+  content: ""; position: absolute; z-index: 0; pointer-events: none; background-repeat: no-repeat; background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 90'%3E%3Cpath d='M8 70C50 30 120 8 192 14C150 30 96 52 30 86C18 90 4 82 8 70Z' fill='%23d8ccb6' opacity='.55'/%3E%3C/svg%3E");
+}
+#tab-kast::before { left: -60px; top: 40px; width: 190px; height: 90px; transform: rotate(-8deg); }
+#tab-kast::after { right: -70px; top: 520px; width: 210px; height: 95px; transform: rotate(170deg); }
+#tab-kast > * { position: relative; z-index: 1; }
+
+/* Nog een streek langs de linkerkant van het prikbord, half erachter */
+.corkboard::before {
+  content: ""; position: absolute; left: -44px; top: 46%; width: 150px; height: 70px; z-index: -1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 90'%3E%3Cpath d='M6 60C58 44 112 18 194 8C160 34 108 58 22 84C10 86 0 70 6 60Z' fill='%239fb3a0' opacity='.45'/%3E%3C/svg%3E") no-repeat center / contain;
+  transform: rotate(12deg);
+}
+/* Penseelstreken in de kast: op plekken waar ze niet achter de borden vallen */
+#tab-kast::before { left: auto; right: -64px; top: 170px; width: 200px; height: 90px; transform: rotate(-14deg); opacity: .9; }
+#tab-kast::after { right: auto; left: -74px; top: 760px; width: 220px; height: 100px; transform: rotate(168deg); opacity: .9; }
+/* Prikbord iets smaller, zodat de penseelstreken langs de zijkanten zichtbaar zijn */
+.corkboard { margin: 0 8px; }
+#tab-kast::before, #tab-kast::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 90'%3E%3Cpath d='M8 70C50 30 120 8 192 14C150 30 96 52 30 86C18 90 4 82 8 70Z' fill='%23cdbb98' opacity='.75'/%3E%3C/svg%3E");
+}
+#tab-kast::before { right: -40px; top: 210px; transform: rotate(-70deg); }
+#tab-kast::after { left: -52px; top: 640px; transform: rotate(110deg); }
+.corkboard::before { left: -30px; top: 30%; }

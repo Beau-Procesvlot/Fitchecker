@@ -134,6 +134,8 @@ function showTab(name) {
   $('#fab').classList.toggle('hidden', name !== 'kast');
   $('#page-title').textContent = { kast: 'Mijn kast', outfit: 'Today’s look', instellingen: 'Instellingen' }[name];
   $('#page-title').classList.toggle('swash', name === 'outfit');
+  // Favorieten-pil rechtsboven: bij de kast en de looks, niet bij instellingen.
+  $('#fav-pill').classList.toggle('hidden', name === 'instellingen');
   window.scrollTo(0, 0);
   if (name === 'kast') renderKast();
   if (name === 'outfit') rerenderKeepScroll();

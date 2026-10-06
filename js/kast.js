@@ -42,6 +42,15 @@ function polaroidHTML(it) {
   </button>`;
 }
 
+$('#gone-cancel').onclick = () => $('#gone-sheet').close();
+
+function secondLifeHTML() {
+  return SECOND_LIFE.map(o => `
+    <a class="settings-row link-row" href="${o.url}" target="_blank" rel="noopener">
+      <span>${esc(o.label)} <span class="muted small">${esc(o.hint)}</span></span><span class="muted">↗</span>
+    </a>`).join('');
+}
+
 function miniHTML(it) {
   return it.photo ? `<img src="${it.photo}" alt="">` : `<span style="background:${colorCss(colorById(it.color))}"></span>`;
 }
@@ -147,11 +156,18 @@ function openDetail(id) {
     $('#detail').close(); renderKast();
   };
   $('#d-edit').onclick = () => { $('#detail').close(); openItemForm(it); };
-  $('#d-del').onclick = async () => {
-    if (!confirm(`"${itemTitle(it)}" verwijderen?`)) return;
-    await removeItem(it.id);
-    $('#detail').close(); renderKast();
-    toast('Verwijderd');
+  // Verwijderen: eerst kort laten zien hoe je het een tweede leven kunt geven (zonder te duwen).
+  $('#d-del').onclick = () => {
+    $('#gone-title').textContent = `${itemTitle(it)} weg uit je kast?`;
+    $('#gone-list').innerHTML = secondLifeHTML();
+    $('#gone-confirm').onclick = async () => {
+      await removeItem(it.id);
+      $('#gone-sheet').close();
+      $('#detail').close();
+      renderKast();
+      toast('Verwijderd uit je kast');
+    };
+    $('#gone-sheet').showModal();
   };
   if (!$('#detail').open) $('#detail').showModal();
 }
