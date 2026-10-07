@@ -903,3 +903,13 @@ dialog.wrapped.wr-light { color: var(--ink); }
   display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.08); color: #444; cursor: pointer;
 }
 .tip-banner .tip-meta span:last-child { margin-right: 4px; }
+
+/* ---------- Personage (fase 6) ---------- */
+.look-figure.view-personage { flex-direction: column; padding-bottom: 40px; }
+canvas.personage {
+  display: block; width: auto; max-width: 100%; height: 380px; margin: 0 auto; aspect-ratio: 1 / 3.4;
+  opacity: 0; transition: opacity .25s ease;
+  filter: drop-shadow(0 6px 10px rgba(40, 25, 10, .12));
+}
+canvas.personage.ready { opacity: 1; aspect-ratio: auto; }
+.look-figure.view-personage .fl-caption { margin-top: 8px; }

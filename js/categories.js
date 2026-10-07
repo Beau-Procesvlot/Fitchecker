@@ -7,6 +7,13 @@ async function renderSettings() {
     renderSettings();
     toast(id === 'man' ? 'Jurken, rokken, jumpsuits en blouses verborgen' : 'Alle categorieën zichtbaar');
   });
+  // Bij "alles laten zien" kies je zelf welk personage je looks draagt.
+  $('#set-personage-block').classList.toggle('hidden', state.profile.gender === 'man' || state.profile.gender === 'vrouw');
+  renderChips($('#set-personage'), [{ id: 'vrouw', label: 'Vrouw' }, { id: 'man', label: 'Man' }], id => personageGender() === id, async id => {
+    state.profile.personage = id;
+    await saveProfile();
+    renderSettings();
+  });
   $('#style-profile').innerHTML = styleProfileHTML();
   $('#second-life-list').innerHTML = secondLifeHTML();
   $('#style-redo').querySelector('span').textContent = state.profile.styleWeights ? 'Moodboard opnieuw doen' : 'Stel je stijl in met het moodboard';

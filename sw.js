@@ -14,7 +14,7 @@ const SHELL = [
   'icons/icon-192.png', 'icons/apple-touch-icon.png',
   'moodboard/index.json',
   'js/data.js', 'js/db.js', 'js/photo.js', 'js/app.js', 'js/kast.js', 'js/item-form.js', 'js/categories.js',
-  'js/figure.js', 'js/weather.js', 'js/trends.js', 'js/style.js', 'js/cutout.js', 'js/cutout-worker.js',
+  'js/figure.js', 'js/personage.js', 'js/weather.js', 'js/trends.js', 'js/style.js', 'js/cutout.js', 'js/cutout-worker.js',
   'js/outfit.js', 'js/planner.js', 'js/onboarding.js', 'js/moodboard.js', 'js/kastcheck.js',
   'js/wrapped.js', 'js/pwa.js', 'js/tips.js',
 ];

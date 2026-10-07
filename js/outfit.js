@@ -505,10 +505,12 @@ function flatlayHTML(parts) {
   return `<div class="flatlay">${layers.join('')}</div>`;
 }
 
-// Welke weergave: flat-lay als er uitgeknipte stukken zijn, anders het poppetje (of je eigen keuze).
+// Welke weergave: flat-lay als er uitgeknipte stukken zijn, anders het personage (of je eigen keuze).
+// ("pop" was de oude naam: het poppetje is vervangen door je eigen personage.)
 function lookView(parts) {
-  if (state.profile.lookView) return state.profile.lookView;
-  return Object.values(parts).some(it => cutoutOf(it)) ? 'flatlay' : 'pop';
+  const own = state.profile.lookView === 'pop' ? 'personage' : state.profile.lookView;
+  if (own) return own;
+  return Object.values(parts).some(it => cutoutOf(it)) ? 'flatlay' : 'personage';
 }
 
 // ---------- Favorieten ----------
@@ -613,14 +615,13 @@ function renderLooks(message) {
         <div class="look-figure view-${view}">
           <div class="view-toggle" role="group" aria-label="Weergave">
             <button data-view="flatlay" class="${view === 'flatlay' ? 'on' : ''}">Flat-lay</button>
-            <button data-view="pop" class="${view === 'pop' ? 'on' : ''}">Pop</button>
+            <button data-view="personage" class="${view === 'personage' ? 'on' : ''}">Personage</button>
           </div>
           ${view === 'flatlay'
-            // Bij flat-lay geen notities over de foto's heen, maar één bijschrift eronder, zoals in een tijdschrift.
-            ? `${flatlayHTML(look.parts)}<p class="fl-caption">${esc(feel)} · ${esc(styleNote)}</p>`
-            : `<span class="note note-top">${esc(feel)}${arrowSVG('down-left')}</span>
-               ${figureSVG(look.parts)}
-               <span class="note note-side">${esc(styleNote)}${arrowSVG('down-right')}</span>`}
+            // Geen notities over de foto's heen, maar één bijschrift eronder, zoals in een tijdschrift.
+            ? flatlayHTML(look.parts)
+            : personageHTML(i)}
+          <p class="fl-caption">${esc(feel)} · ${esc(styleNote)}</p>
           <span class="doodle">${svgIcon(DOODLES[i % DOODLES.length], 34)}</span>
         </div>
       </div>
@@ -635,6 +636,7 @@ function renderLooks(message) {
       </details>` : ''}
     </article>`;
   }).join('');
+  drawPersonages();
   $('#looks').querySelectorAll('.swap').forEach(b => b.onclick = () => openSwap(+b.dataset.look, b.dataset.slot));
   $('#looks').querySelectorAll('.fav-btn').forEach(b => b.onclick = () => toggleFavorite(looks[+b.dataset.look]));
   // Duimpjes: de app leert je smaak. Bij een duim omlaag kun je (optioneel) zeggen waarom.
@@ -651,7 +653,7 @@ function renderLooks(message) {
     toast('Dank je, de app past zich aan');
     rerenderKeepScroll();
   });
-  // Wisselen tussen flat-lay en poppetje; de keuze wordt onthouden.
+  // Wisselen tussen flat-lay en personage; de keuze wordt onthouden.
   $('#looks').querySelectorAll('.view-toggle button').forEach(b => b.onclick = () => {
     state.profile.lookView = b.dataset.view;
     saveProfile();
