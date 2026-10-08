@@ -11,8 +11,9 @@ const PERSONAGE_CAT = {
   sneakers: 'sneakers', laarzen: 'laarzen', 'nette-schoenen': 'nette-schoenen',
 };
 const PERSONAGE_SLOT = { base: 'tshirt', mid: 'trui', bottom: 'broek', full: 'jurk', shoes: 'sneakers' };
-// Volgorde van tekenen: onderop eerst.
-const PERSONAGE_ORDER = ['shoes', 'bottom', 'full', 'base', 'mid'];
+// Volgorde van tekenen: onderop eerst. Schoenen na de broek: de schoen staat vóór de broekspijp
+// (en zo verdwijnt ook een stukje voet dat in een broeklaag zit).
+const PERSONAGE_ORDER = ['bottom', 'full', 'shoes', 'base', 'mid'];
 
 // Man of vrouw volgt "Kast voor"; bij "alles laten zien" kies je het zelf bij Instellingen.
 const personageGender = () => ['man', 'vrouw'].includes(state.profile.gender) ? state.profile.gender : (state.profile.personage || 'vrouw');
