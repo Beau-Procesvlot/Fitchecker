@@ -158,6 +158,7 @@
     <h2>Overig</h2>
     <button class="settings-row" id="settings-demo"><span>Voorbeeldkast toevoegen</span><span class="muted">›</span></button>
     <button class="settings-row" id="settings-welcome"><span>Welkomstscherm opnieuw</span><span class="muted">›</span></button>
+    <button class="settings-row" id="settings-phototips"><span>Fototips weer laten zien</span><span class="muted">›</span></button>
     <button class="settings-row" data-open-privacy><span>Privacy: wat gebeurt er met je gegevens?</span><span class="muted">›</span></button>
   </section>
 </main>
@@ -218,7 +219,7 @@
       <div class="chips" id="f-fit"></div>
     </div>
 
-    <p class="label">Kleur <span class="muted">(herkend uit je foto)</span></p>
+    <p class="label">Kleur <span class="muted">(herkend na het uitknippen)</span></p>
     <div class="color-summary" id="f-color-summary"></div>
     <button type="button" class="link" id="f-color-fix">Klopt niet? Kies zelf</button>
     <div class="colors hidden" id="f-colors"></div>
@@ -285,6 +286,30 @@
         <strong>Snel, zonder foto</strong>
         <span>Voor basics, zoals een effen wit T-shirt. Kleur kies je zelf; een foto kan later nog.</span>
       </button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Fototips vóór het fotograferen, met de schets -->
+<dialog id="photo-tips" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body photo-tips">
+    <h2 class="serif">Zo maak je de beste foto</h2>
+    <img class="pt-sketch" src="img/fototip.jpg" alt="Schets: een hoodie plat neergelegd, helemaal in beeld, recht van boven gefotografeerd">
+    <ul>
+      <li><b>Plat neerleggen</b>, mouwen naast het lijf, zonder kreukels.</li>
+      <li><b>Helemaal in beeld</b>, met een beetje ruimte eromheen en niets anders op de foto.</li>
+      <li><b>Recht van boven</b> fotograferen.</li>
+      <li><b>Licht op donker, donker op licht:</b> een egale ondergrond die niet op het stuk lijkt.</li>
+      <li><b>Goed licht</b>, liefst daglicht, zonder harde schaduw.</li>
+    </ul>
+    <p class="muted small" id="pt-download">De app knipt je stuk daarna uit op je telefoon en herkent dan pas de kleur. De eerste keer downloadt hij daarvoor eenmalig ongeveer 53 MB, liefst via wifi.</p>
+    <label class="pt-hide"><input type="checkbox" id="pt-hide"> Niet meer laten zien</label>
+  </div>
+  <div class="sheet-footer">
+    <div class="row">
+      <button type="button" class="btn" id="pt-cancel">Annuleren</button>
+      <button type="button" class="btn primary" id="pt-go">Foto's kiezen</button>
     </div>
   </div>
 </dialog>

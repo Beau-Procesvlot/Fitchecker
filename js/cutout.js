@@ -162,6 +162,51 @@ const Cutout = (() => {
     if (typeof renderSettings === 'function' && !$('#tab-instellingen').classList.contains('hidden')) renderSettings();
   }
 
+  // ---------- Direct knippen bij het toevoegen ----------
+  // Het model stil op de achtergrond binnenhalen (de toestemming is al gegeven in de fototips).
+  let preloading = null;
+  const progressListeners = new Set();
+  function preloadQuiet() {
+    if (state.profile.cutoutReady) return Promise.resolve(true);
+    if (!preloading) {
+      preloading = (async () => {
+        const parts = {};
+        const progress = (key, current, total) => {
+          parts[key] = [current, total];
+          const [c, t] = Object.values(parts).reduce((a, [x, y]) => [a[0] + x, a[1] + y], [0, 0]);
+          progressListeners.forEach(fn => fn(c, t));
+        };
+        try {
+          const viaWorker = ask('preload', {}, progress);
+          if (viaWorker) await viaWorker.catch(async () => { workerFailed = true; await (await loadLib()).preload({ ...CONFIG, progress }); });
+          else await (await loadLib()).preload({ ...CONFIG, progress });
+          state.profile.cutoutReady = true;
+          state.profile.cutoutDeclined = false;
+          await saveProfile();
+          return true;
+        } catch {
+          preloading = null; // later opnieuw proberen
+          return false;
+        }
+      })();
+    }
+    return preloading;
+  }
+
+  // Eén foto meteen uitknippen. Geeft { dataUrl, canvas } of null (geen model, geen internet, mislukt).
+  // onProgress(binnen, totaal) in bytes, alleen zolang het model nog downloadt.
+  async function cutNow(dataUrl, onProgress) {
+    if (onProgress) progressListeners.add(onProgress);
+    try {
+      if (!(await preloadQuiet())) return null;
+      return await cut(dataUrl);
+    } catch {
+      return null;
+    } finally {
+      if (onProgress) progressListeners.delete(onProgress);
+    }
+  }
+
   function enqueue(item) {
     if (!item) return;
     if (item.photo && !item.cutout) queue.push({ id: item.id, side: 'front' });
@@ -181,7 +226,7 @@ const Cutout = (() => {
     ensureReady.force = false;
   }
 
-  return { enqueue, enqueueAll, isBusy: () => running };
+  return { enqueue, enqueueAll, cutNow, preloadQuiet, isBusy: () => running };
 })();
 
 // Snijdt de lege (doorzichtige) rand weg en verkleint naar max 700 px. Geeft null als er

@@ -10,7 +10,7 @@ const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'version.json',
   'css/fonts.css', 'css/app.css',
   'fonts/Caveat.woff2', 'fonts/DMSerifDisplay.woff2', 'fonts/Inter.woff2',
-  'img/kurk.jpg', 'img/hout-boven.jpg', 'img/hout-onder.jpg', 'img/hout-links.jpg', 'img/hout-rechts.jpg',
+  'img/kurk.jpg', 'img/fototip.jpg', 'img/hout-boven.jpg', 'img/hout-onder.jpg', 'img/hout-links.jpg', 'img/hout-rechts.jpg',
   'icons/icon-192.png', 'icons/apple-touch-icon.png',
   'moodboard/index.json',
   'js/data.js', 'js/db.js', 'js/photo.js', 'js/app.js', 'js/kast.js', 'js/item-form.js', 'js/categories.js',
