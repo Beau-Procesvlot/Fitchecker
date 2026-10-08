@@ -79,7 +79,10 @@ const Weather = (() => {
     if (dayOffset === 0 && end < nowHour) end = hourStr(new Date(now.getTime() + 6 * 3600 * 1000));
     const hours = fc.hours.filter(h => h.time >= startHour && h.time <= end);
     if (!hours.length) throw new Error('Geen weerbericht voor dat moment.');
+    const avg = list => list.reduce((s, v) => s + v, 0) / list.length;
     return {
+      avgFeels: avg(hours.map(h => h.feels)),
+      avgTemp: avg(hours.map(h => h.temp)),
       minFeels: Math.min(...hours.map(h => h.feels)),
       minTemp: Math.min(...hours.map(h => h.temp)),
       maxTemp: Math.max(...hours.map(h => h.temp)),
@@ -90,23 +93,27 @@ const Weather = (() => {
 
   // Van graden naar warm / mild / koud, met de koukleum-instelling en het vervoer erbij.
   // koukleum: -2 (snel warm) … +2 (snel koud). Wie het snel koud heeft, vindt 12° al koud.
+  // De outfit kijkt naar het gemiddelde over de uren dat je weg bent (anders kleed je je een
+  // hele dag aan op het koudste kwartier); het jas-advies kijkt naar het koudste moment.
   function classify(w, { koukleum = 0, transport = 'fiets' } = {}) {
-    let feels = w.minFeels;
-    if (transport === 'fiets') feels -= 2;      // rijwind
-    if (transport === 'auto') feels += 3;       // je staat weinig buiten
+    const adjust = t => t + (transport === 'fiets' ? -2 : transport === 'auto' ? 3 : 0); // rijwind / weinig buiten
     const shift = koukleum * 1.5;
-    const level = feels < 10 + shift ? 'koud' : feels > 18 + shift ? 'warm' : 'mild';
+    const levelOf = t => t < 10 + shift ? 'koud' : t > 18 + shift ? 'warm' : 'mild';
     const outside = transport !== 'auto';
     return {
-      level,
+      level: levelOf(adjust(w.avgFeels ?? w.minFeels)),
+      coatLevel: levelOf(adjust(w.minFeels)),
       rain: outside && w.rain >= 50,
       windy: outside && w.wind >= 30,
     };
   }
 
+  // Gemiddelde temperatuur; loopt het flink uiteen, dan ook van-tot ("13°, 8–17°").
   function describe(w) {
-    const parts = [`${Math.round(w.minTemp)}°`];
-    if (Math.round(w.minFeels) < Math.round(w.minTemp)) parts[0] += `, voelt als ${Math.round(w.minFeels)}°`;
+    const avgT = Math.round(w.avgTemp ?? w.minTemp), avgF = Math.round(w.avgFeels ?? w.minFeels);
+    const parts = [`${avgT}°`];
+    if (avgF < avgT) parts[0] += `, voelt als ${avgF}°`;
+    if (Math.round(w.maxTemp) - Math.round(w.minTemp) >= 4) parts.push(`${Math.round(w.minTemp)}–${Math.round(w.maxTemp)}°`);
     if (w.rain >= 20) parts.push(`${w.rain}% regen`);
     if (w.wind >= 30) parts.push('veel wind');
     return parts.join(' · ');

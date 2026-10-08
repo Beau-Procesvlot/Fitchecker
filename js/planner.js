@@ -172,6 +172,7 @@ $('#plan-go').onclick = async () => {
       Object.assign(ctx, Weather.classify(w, { koukleum: state.profile.koukleum, transport: plan.transport }));
       ctx.weatherText = Weather.describe(w);
       ctx.minFeels = Math.round(w.minFeels);
+      ctx.avgFeels = Math.round(w.avgFeels);
       ctx.rainPct = w.rain;
       plan.weatherError = null;
     } catch (err) {

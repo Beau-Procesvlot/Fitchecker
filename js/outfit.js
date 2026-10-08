@@ -324,7 +324,7 @@ function explainLook(look, ctx) {
   }
   // Weer
   if (ctx && !ctx.indoor) {
-    const feels = ctx.minFeels !== undefined ? ` (voelt als ${ctx.minFeels}°)` : '';
+    const feels = ctx.avgFeels !== undefined ? ` (voelt gemiddeld als ${ctx.avgFeels}°)` : ctx.minFeels !== undefined ? ` (voelt als ${ctx.minFeels}°)` : '';
     if (ctx.level === 'koud') reasons.push(['Weer', `Het is koud${feels}, daarom ${look.parts.mid ? 'een laag eroverheen' : 'warme stukken'}.${ctx.rain ? ' En kans op regen: jas mee.' : ''}`]);
     else if (ctx.level === 'warm') reasons.push(['Weer', 'Warm weer: dunne, luchtige stukken.']);
     else if (ctx.rain) reasons.push(['Weer', 'Niet koud, wel kans op regen: denk aan een jas en dichte schoenen.']);
@@ -376,11 +376,17 @@ function renderWhyMore() {
 // Jas: geen stuk in de look, maar een advies op basis van het weer.
 function coatAdvice(ctx) {
   if (!ctx || ctx.indoor) return null;
+  // De jas kijkt naar het koudste moment (de outfit naar het gemiddelde): die trek je aan als het afkoelt.
+  const level = ctx.coatLevel || ctx.level;
   const feels = ctx.minFeels !== undefined ? `, voelt als ${ctx.minFeels}°` : '';
-  if (ctx.level === 'koud') return { need: 'ja', text: 'Jas nodig', why: `koud${feels}${ctx.rain ? ' en kans op regen' : ''}` };
+  if (level === 'koud') {
+    const later = ctx.level !== 'koud' ? 'op het koudste moment ' : '';
+    return { need: 'ja', text: 'Jas nodig', why: `${later}koud${feels}${ctx.rain ? ' en kans op regen' : ''}` };
+  }
   if (ctx.rain) return { need: 'ja', text: 'Jas nodig', why: ctx.rainPct ? `${ctx.rainPct}% kans op regen` : 'kans op regen' };
-  if (ctx.level === 'mild' && ctx.windy) return { need: 'handig', text: 'Jas handig', why: 'het waait flink' };
-  return { need: 'nee', text: 'Geen jas nodig', why: ctx.level === 'warm' ? 'lekker warm' : 'droog en mild' };
+  if (level === 'mild' && ctx.windy) return { need: 'handig', text: 'Jas handig', why: 'het waait flink' };
+  if (level === 'mild' && ctx.level === 'warm') return { need: 'handig', text: 'Jas handig', why: `het koelt af${feels}` };
+  return { need: 'nee', text: 'Geen jas nodig', why: level === 'warm' ? 'lekker warm' : 'droog en mild' };
 }
 
 function coatHTML(ctx) {
@@ -528,7 +534,7 @@ async function toggleFavorite(look) {
   if (i >= 0) favs.splice(i, 1);
   else favs.unshift({
     id: newId(), at: Date.now(), why: look.why,
-    ctx: lookCtx ? { label: lookCtx.label, sitId: lookCtx.sitId, styles: lookCtx.styles, weatherText: lookCtx.weatherText, indoor: lookCtx.indoor, level: lookCtx.level, rain: lookCtx.rain, windy: lookCtx.windy, minFeels: lookCtx.minFeels, search: lookCtx.search } : null,
+    ctx: lookCtx ? { label: lookCtx.label, sitId: lookCtx.sitId, styles: lookCtx.styles, weatherText: lookCtx.weatherText, indoor: lookCtx.indoor, level: lookCtx.level, coatLevel: lookCtx.coatLevel, rain: lookCtx.rain, windy: lookCtx.windy, minFeels: lookCtx.minFeels, avgFeels: lookCtx.avgFeels, search: lookCtx.search } : null,
     parts: Object.fromEntries(Object.entries(look.parts).map(([s, it]) => [s, it.id])),
   });
   await DB.setMeta('favorites', favs);
