@@ -125,8 +125,9 @@ async function composePersonage(parts) {
     tg.drawImage(img, 0, 0);
     g.drawImage(t, pos.x - v.x, pos.y - v.y);
     colored[l.slot] = { canvas: t, name: l.name, pos };
-    // Shirt onder een trui, hoodie of vest: een randje laten uitpiepen onder de zoom.
-    if (l.slot === 'mid' && colored.base) await drawHemPeek(g, set, v, colored.base, colored.mid);
+    // Shirt onder een trui of hoodie: een randje laten uitpiepen onder de zoom.
+    // Niet bij een vest: dat is open, het shirt zie je daar al tussen de panden.
+    if (l.slot === 'mid' && l.name !== 'vest' && colored.base) await drawHemPeek(g, set, v, colored.base, colored.mid);
   }
   if (personageCache.size > 40) personageCache.delete(personageCache.keys().next().value);
   personageCache.set(key, c);
