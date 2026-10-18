@@ -1,4 +1,5 @@
-/* Fitchecker: strak als een modeblad, op crème papier, met een Pinterest-gevoel. */
+/* Fitchecker, een app van Zonde.
+   Strak als een modeblad, op crème papier, met een Pinterest-gevoel. */
 :root {
   --paper: #f3efe6;
   --card: #fbf9f4;
@@ -43,7 +44,10 @@ h2 { font-size: 1.15rem; font-weight: 600; }
   padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 10px;
 }
 .brand { display: block; font-size: .68rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
-.topbar h1 { font-family: var(--serif); font-size: 2.3rem; line-height: 1.05; letter-spacing: -.01em; margin-top: 2px; }
+.brand-row { display: flex; align-items: center; gap: 7px; }
+.brand-icon { width: 20px; height: 20px; border-radius: 6px; }
+.zonde { margin-left: auto; font-size: .72rem; color: var(--muted); }
+.topbar h1 { font-family: var(--serif); font-size: 2.3rem; line-height: 1.05; letter-spacing: -.01em; margin-top: 6px; }
 main { padding: 0 16px; }
 
 .tabbar {
