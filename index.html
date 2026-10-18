@@ -159,6 +159,8 @@
     <button class="settings-row" id="settings-demo"><span>Voorbeeldkast toevoegen</span><span class="muted">›</span></button>
     <button class="settings-row" id="settings-welcome"><span>Welkomstscherm opnieuw</span><span class="muted">›</span></button>
     <button class="settings-row" id="settings-phototips"><span>Fototips weer laten zien</span><span class="muted">›</span></button>
+    <!-- TEST paywall: weghalen als het klaar is (en de handler onderaan js/slots.js) -->
+    <button class="settings-row" id="slots-test"><span>TEST: paywall aan/uit</span><span class="muted">›</span></button>
     <button class="settings-row" data-open-privacy><span>Privacy: wat gebeurt er met je gegevens?</span><span class="muted">›</span></button>
   </section>
 </main>
@@ -291,6 +293,28 @@
 </dialog>
 
 <!-- Fototips vóór het fotograferen, met de schets -->
+<dialog id="slots-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Je kast zit vol</h2>
+    <p class="muted" id="slots-text"></p>
+    <div class="choice-list">
+      <button class="choice" id="slots-pack">
+        <strong>+20 plekken</strong>
+        <span id="slots-pack-price"></span>
+      </button>
+      <button class="choice" id="slots-all">
+        <strong>Onbeperkt</strong>
+        <span id="slots-all-price"></span>
+      </button>
+    </div>
+    <p class="slots-restore"><button type="button" class="link muted" id="slots-restore">Eerdere aankoop herstellen</button></p>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn" id="slots-later">Niet nu</button>
+  </div>
+</dialog>
+
 <dialog id="photo-tips" class="sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-body photo-tips">
@@ -562,6 +586,7 @@
 <script src="js/kast.js"></script>
 <script src="js/item-form.js"></script>
 <script src="js/categories.js"></script>
+<script src="js/slots.js"></script>
 <script src="js/figure.js"></script>
 <script src="js/personage.js"></script>
 <script src="js/weather.js"></script>

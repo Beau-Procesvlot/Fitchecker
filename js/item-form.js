@@ -10,7 +10,11 @@ const EMPTY_DRAFT = () => ({ processing: false, id: null, name: '', photo: null,
 // ---------- Starten ----------
 
 // De ＋ vraagt: foto's kiezen (één of meerdere) of snel zonder foto.
-function startAdding() { $('#add-choice').showModal(); }
+// Is je kast vol, dan eerst het aanbod voor meer plekken.
+async function startAdding() {
+  if (!hasRoom() && !await askForSlots()) return;
+  $('#add-choice').showModal();
+}
 $('#choice-photos').onclick = () => {
   $('#add-choice').close();
   $('#f-photos').value = '';
@@ -280,6 +284,18 @@ $('#f-cancel').onclick = () => {
 $('#f-save').onclick = async () => {
   if (!draft.categoryId || draft.processing || draft.processingBack) return;
   const isNew = !draft.id;
+  // Kast vol midden in een rij foto's: nu het aanbod, de foto's blijven klaarstaan.
+  if (isNew && !hasRoom()) {
+    const many = batch.files.length > 1;
+    if (!await askForSlots(many ? batch.files.length - batch.index : 0)) {
+      if (many) {
+        $('#item-form').close();
+        toast(`${batch.saved} van ${batch.files.length} toegevoegd aan je kast`);
+        batch.files = [];
+      }
+      return;
+    }
+  }
   const { processing, processingBack, lowContrast, cutting, cutLabel, cutFailed, ...rest } = draft;
   const item = {
     ...rest,

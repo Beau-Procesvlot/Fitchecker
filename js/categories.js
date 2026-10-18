@@ -222,6 +222,8 @@ $('#backup-file').onchange = async e => {
     for (const it of data.items) await saveItem(it);
     state.categories = [...state.categories, ...data.categories.filter(c => !categoryById(c.id))];
     await saveCategories();
+    // Gekochte plekken komen mee terug.
+    if (mergePurchases(data.profile?.purchases)) await saveProfile();
     toast(`${data.items.length} stuks teruggezet`);
     renderSettings();
   } catch {

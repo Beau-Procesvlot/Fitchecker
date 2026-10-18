@@ -930,3 +930,8 @@ canvas.personage.ready { opacity: 1; aspect-ratio: auto; }
 .pt-hide { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: .92rem; color: var(--muted); }
 .pt-hide input { width: 18px; height: 18px; accent-color: var(--ink); }
 .cut-note { margin: 6px 0 0; }
+
+/* Kast vol: meer plekken */
+#slots-pack { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+#slots-pack span { color: var(--soft); }
+.slots-restore { text-align: center; margin-top: 14px; }

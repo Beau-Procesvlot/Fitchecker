@@ -194,7 +194,7 @@ async function loadDemo() {
   for (const [name, categoryId, color, warmth, styles] of list) {
     await saveItem({
       id: newId(), name, photo: null, categoryId, color, colors: colorMix[name] || [{ id: color, pct: 100 }],
-      fit: fits[name] || 'normaal', warmth, styles, inWash: false, worn: [], createdAt: Date.now(),
+      fit: fits[name] || 'normaal', warmth, styles, inWash: false, worn: [], createdAt: Date.now(), demo: true,
     });
   }
   toast(`${list.length} voorbeeldstukken toegevoegd`);
