@@ -701,6 +701,9 @@ async function restoreLastLooks() {
   return true;
 }
 
+// Tijdens het vegen alleen de bolletjes en de actieve look bijwerken; de hoogte pas als
+// de rij stilstaat (de hoogte veranderen midden in een veeg laat de iPhone haperen).
+let looksSettle = null;
 $('#looks').addEventListener('scroll', () => {
   const el = $('#looks');
   const slide = el.querySelector('.look');
@@ -710,8 +713,9 @@ $('#looks').addEventListener('scroll', () => {
     activeLook = i;
     $('#look-dots').querySelectorAll('span').forEach((d, n) => d.classList.toggle('on', n === i));
     el.querySelectorAll('.look').forEach((l, n) => l.classList.toggle('active', n === i));
-    renderWhyMore();
   }
+  clearTimeout(looksSettle);
+  looksSettle = setTimeout(renderWhyMore, 120);
 }, { passive: true });
 
 // ---------- Eén stuk wisselen ("+") ----------

@@ -223,6 +223,7 @@ dialog#item-form { height: 92vh; height: 92dvh; }
 .looks::-webkit-scrollbar { display: none; }
 .look {
   flex: 0 0 88%; scroll-snap-align: start;
+  scroll-snap-stop: always; /* één look per veeg, ook bij een snelle veeg */
   background: var(--card); border: 1px solid var(--line); border-radius: 20px;
   padding: 14px 14px 12px;
 }
@@ -477,7 +478,7 @@ dialog.welcome::backdrop { background: var(--paper); }
 .btn:active:not(:disabled), .chip:active, .day-option:active { transform: scale(.97); }
 
 /* Looks: de middelste look groot, de buren kleiner en lichter */
-.look { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .35s; transform-origin: center top; }
+.look { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .35s; transform-origin: center top; will-change: transform; }
 .looks .look:not(.active) { transform: scale(.93); opacity: .55; }
 .look.active .look-title { animation: titleIn .5s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes titleIn { from { opacity: 0; letter-spacing: .08em; } }
