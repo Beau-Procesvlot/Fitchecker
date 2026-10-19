@@ -235,6 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Vraag de browser om de kast niet zomaar op te ruimen bij weinig ruimte.
   navigator.storage?.persist?.().catch(() => {});
   plan.transport = state.profile.transport;
+  initStart();
   await loadSuggested();
   await loadFavoriteKeys();
   updateFavButton();

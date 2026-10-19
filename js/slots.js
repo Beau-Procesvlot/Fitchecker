@@ -33,7 +33,7 @@ function slotLimit() {
     state.profile.slotsBase = Math.max(PLEKKEN.free, countedItems());
     saveProfile();
   }
-  return state.profile.slotsBase + PLEKKEN.pack * (p.packs || 0);
+  return state.profile.slotsBase + PLEKKEN.pack * (p.packs || 0) + inviteBonus();
 }
 const hasRoom = () => countedItems() < slotLimit();
 
@@ -47,6 +47,7 @@ function askForSlots(waiting = 0) {
       + (waiting > 1 ? ` Er wachten nog ${waiting} foto's.` : '');
     $('#slots-pack-price').textContent = `Eenmalig ${PLEKKEN.packPrice}.`;
     $('#slots-all-price').textContent = `Nooit meer vol, eenmalig ${PLEKKEN.allPrice}.`;
+    renderSlotsInvite();
     $('#slots-sheet').showModal();
   });
 }
@@ -94,6 +95,8 @@ $('#slots-test').onclick = async () => {
   state.profile.slotsTest = on;
   delete state.profile.slotsBase;
   delete state.profile.purchases;
+  delete state.profile.friends;
   await saveProfile();
+  renderInvite();
   toast(on ? `Paywall-test aan: je kast is vol bij ${slotLimit()} stuks` : 'Paywall-test uit: weer onbeperkt');
 };

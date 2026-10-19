@@ -25,6 +25,7 @@ async function renderSettings() {
   renderLocationStatus();
   renderBackupInfo();
   renderWrappedSettings();
+  renderInvite();
 
   const withPhoto = state.items.filter(i => i.photo);
   const cut = withPhoto.filter(i => cutoutOf(i));
@@ -222,8 +223,10 @@ $('#backup-file').onchange = async e => {
     for (const it of data.items) await saveItem(it);
     state.categories = [...state.categories, ...data.categories.filter(c => !categoryById(c.id))];
     await saveCategories();
-    // Gekochte plekken komen mee terug.
-    if (mergePurchases(data.profile?.purchases)) await saveProfile();
+    // Gekochte plekken en uitgenodigde vrienden komen mee terug.
+    mergePurchases(data.profile?.purchases);
+    state.profile.friends = [...new Set([...(state.profile.friends || []), ...(data.profile?.friends || [])])].slice(0, INVITE.max);
+    await saveProfile();
     toast(`${data.items.length} stuks teruggezet`);
     renderSettings();
   } catch {

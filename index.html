@@ -60,6 +60,7 @@
         <button class="btn small ghost" id="backup-nudge-later">Later</button>
       </div>
     </div>
+    <div id="start-card" class="start-card hidden"></div>
     <div class="boards" id="kast-boards"></div>
     <div id="corkboard" class="corkboard">
       <div id="kast-list" class="pol-grid"></div>
@@ -74,7 +75,7 @@
         <span style="--r:2deg;background:#1f2b47;color:#f3efe6">Vintage</span>
       </div>
       <h2 class="serif">Begin je kast</h2>
-      <p class="muted">Maak een foto van je eerste kledingstuk. Hoe meer je toevoegt, hoe beter de looks. Vergeet niet de stukken die je zelden draagt: daar zitten de verrassende looks in.</p>
+      <p class="muted">Begin met 5 stuks die je deze week draagt: een broek of rok, een shirt en een trui, schoenen, en één stuk dat je bijna vergeten was. Daarna staat je eerste look klaar.</p>
       <button class="btn primary" id="empty-add">Eerste kledingstuk toevoegen</button>
       <button class="btn ghost" id="empty-demo">Eerst even rondkijken met een voorbeeldkast</button>
     </div>
@@ -96,7 +97,10 @@
     <div id="look-dots" class="dots"></div>
     <div id="look-actions" class="look-actions hidden">
       <button class="btn primary" id="wear-look">Draag ik vandaag</button>
-      <button class="btn" id="more-looks">Nieuwe looks</button>
+      <div class="row">
+        <button class="btn" id="more-looks">Nieuwe looks</button>
+        <button class="btn" id="story-look">Story maken</button>
+      </div>
     </div>
     <section id="why-more" class="why-more hidden"></section>
   </section>
@@ -158,6 +162,14 @@
     <button class="settings-row" id="backup-save"><span>Kast opslaan als bestand</span><span class="muted">›</span></button>
     <button class="settings-row" id="backup-restore"><span>Back-up terugzetten</span><span class="muted">›</span></button>
     <input type="file" id="backup-file" accept="application/json,.json" hidden>
+
+    <h2>Vrienden</h2>
+    <p class="muted small" id="invite-info"></p>
+    <button class="settings-row" id="invite-share"><span>Fitchecker delen met een vriend</span><span class="muted">›</span></button>
+    <div id="invite-rewards" class="hidden">
+      <button class="settings-row" id="invite-redeem"><span>Bedankcode van een vriend invullen</span><span class="muted">›</span></button>
+      <button class="settings-row" id="invite-mycode"><span>Getipt door iemand? Stuur je bedankcode</span><span class="muted">›</span></button>
+    </div>
 
     <h2>Overig</h2>
     <button class="settings-row" id="settings-demo"><span>Voorbeeldkast toevoegen</span><span class="muted">›</span></button>
@@ -312,10 +324,47 @@
         <span id="slots-all-price"></span>
       </button>
     </div>
+    <button class="choice" id="slots-invite">
+      <strong>Gratis: tip een vriend</strong>
+      <span>+10 plekken per vriend die begint.</span>
+    </button>
     <p class="slots-restore"><button type="button" class="link muted" id="slots-restore">Eerdere aankoop herstellen</button></p>
   </div>
   <div class="sheet-footer">
     <button type="button" class="btn" id="slots-later">Niet nu</button>
+  </div>
+</dialog>
+
+<dialog id="first-look" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <p class="sc-kicker">5 stuks binnen</p>
+    <h2 class="serif">Je eerste look staat klaar</h2>
+    <p class="muted">De app kan al combineren. Hoe meer je toevoegt, hoe verrassender je looks worden. Morgen krijg je een kleine opdracht om je kast verder te vullen.</p>
+    <div id="fl-thanks" class="fl-thanks hidden">
+      <p class="small"><strong>Getipt door iemand?</strong> Stuur diegene je bedankcode, dan krijgt die 10 extra plekken.</p>
+      <button type="button" class="btn small" id="fl-thanks-btn">Bedankcode sturen</button>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn primary" id="fl-go">Bekijk je look</button>
+  </div>
+</dialog>
+
+<dialog id="story-sheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body">
+    <h2 class="serif">Je look als story</h2>
+    <p class="muted" id="story-intro">Maak een spiegelselfie in deze outfit. Fitchecker zet hem naast de look van de app, klaar voor je Instagram-story.</p>
+    <div id="story-preview" class="story-preview hidden"><img id="story-img" alt="Voorbeeld van je story"></div>
+    <input type="file" id="story-file" accept="image/*" hidden>
+  </div>
+  <div class="sheet-footer">
+    <div class="row">
+      <button type="button" class="btn ghost" id="story-close">Sluiten</button>
+      <button type="button" class="btn primary" id="story-photo">Foto kiezen of maken</button>
+      <button type="button" class="btn primary hidden" id="story-share">Delen</button>
+    </div>
   </div>
 </dialog>
 
@@ -591,6 +640,8 @@
 <script src="js/item-form.js"></script>
 <script src="js/categories.js"></script>
 <script src="js/slots.js"></script>
+<script src="js/start.js"></script>
+<script src="js/invite.js"></script>
 <script src="js/figure.js"></script>
 <script src="js/personage.js"></script>
 <script src="js/weather.js"></script>
@@ -598,6 +649,7 @@
 <script src="js/style.js"></script>
 <script src="js/cutout.js"></script>
 <script src="js/outfit.js"></script>
+<script src="js/story.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/onboarding.js"></script>
 <script src="js/moodboard.js"></script>

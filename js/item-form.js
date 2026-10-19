@@ -273,6 +273,7 @@ function nextInBatch(previous) {
   $('#item-form').close();
   if (batch.files.length > 1) toast(`${batch.saved} van ${batch.files.length} toegevoegd aan je kast`);
   batch.files = [];
+  maybeFirstLook();
   return false;
 }
 
@@ -318,4 +319,5 @@ $('#f-save').onclick = async () => {
   batch.files = [];
   $('#item-form').close();
   toast(isNew ? 'Toegevoegd aan je kast' : 'Opgeslagen');
+  if (isNew) maybeFirstLook();
 };
